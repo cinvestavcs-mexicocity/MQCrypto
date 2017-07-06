@@ -1,0 +1,22 @@
+MPKCKeys DEFINITIONS ::= BEGIN
+    MPKCPublicKey ::= SEQUENCE {
+        version  IA5String,
+        key   OCTET STRING
+    }
+
+    MPKCPrivateKey ::= SEQUENCE {
+    	version  IA5String,
+        key   OCTET STRING
+    }
+
+    MPKCSignature ::= SEQUENCE {
+    	version IA5String,
+        digest IA5String,
+    	signature   OCTET STRING
+    }
+
+    MPKCMessage ::= SEQUENCE {
+    	version IA5String,
+    	message   OCTET STRING
+    }
+END
