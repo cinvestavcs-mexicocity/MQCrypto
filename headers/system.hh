@@ -27,6 +27,7 @@ extern "C" {
 	#include <MPKCPrivateKey.h>
 	#include <MPKCSignature.h>
 	#include <MPKCMessage.h>
+	#include <MPKCKeypair.h>
 }
 
 #include <b64/encode.h>

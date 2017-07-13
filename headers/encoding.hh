@@ -75,6 +75,36 @@ int base64decodeKeyPair(const char *PKfile, const char *SKfile)
 	return 0;
 }
 
+int base64encodeKeyPair(const char *Keypairfile, char output[])
+{
+	std::string inputKP = Keypairfile;
+	std::string outputKP = output;
+	base64::encoder E;
+
+	std::ifstream inKPstream(inputKP.c_str(), std::ios_base::in | std::ios_base::binary);
+	if (!inKPstream.is_open())
+	{
+		std::cout<<"Could not open file: "<<inputKP<<"\n";
+		exit(-1);
+	}
+	
+	std::ofstream outKPstream(outputKP.c_str(), std::ios_base::out | std::ios_base::binary);
+	if (!outKPstream.is_open())
+	{
+		std::cout<<"Could not open file: "<<outputKP<<"\n";
+		exit(-1);
+	}
+
+	E.encode(inKPstream, outKPstream);
+
+	// std::cout<<"Keypair saved in file: "<<output<<"\n";
+
+	inKPstream.close();
+	outKPstream.close();
+
+	return 0;
+}
+
 
 int base64encodeKeyPair(const char *PKfile, const char *SKfile, char output[])
 {
@@ -174,95 +204,140 @@ int base64encodeCiphertext(const char *inputFile, const char *Ciphertext)
 	return 0;
 }
 
-int encodeKeyPair(char cryptosystem[], 
+// int encodeKeyPair(char cryptosystem[], 
+//   const char *pk, const unsigned long long pklen,
+//   const char *sk, const unsigned long long sklen,
+//   char output[])
+// {
+//   	MPKCPublicKey_t *PK; /* MPKC Public Key Structure */
+//   	MPKCPrivateKey_t *SK; /* MPKC Private Key Structure */
+//   	asn_enc_rval_t ec;      /* Encoder return value  */
+
+//   	PK = (MPKCPublicKey_t *)calloc(1, sizeof(MPKCPublicKey_t));
+//   	if(!PK) {
+//     	perror("Public Key calloc() failed");
+//     	exit(1);
+//   	}
+
+//   	SK = (MPKCPrivateKey_t *)calloc(1, sizeof(MPKCPrivateKey_t));
+//   	if(!SK) {
+//     	perror("Private Key calloc() failed");
+//     	exit(1);
+//   	}
+
+//   	if(OCTET_STRING_fromBuf(&PK->version, &cryptosystem[0], strlen(cryptosystem)) < 0) {
+//     	perror("Error Buffer");
+//   	}
+
+//   	if(OCTET_STRING_fromBuf(&PK->key, pk, pklen) < 0) {
+//     	perror("Error Buffer");
+//   	}
+
+//   	if(OCTET_STRING_fromBuf(&SK->version, &cryptosystem[0], strlen(cryptosystem)) < 0) {
+//     	perror("Error Buffer");
+//   	}
+
+//   	if(OCTET_STRING_fromBuf(&SK->key, sk, sklen) < 0) {
+//     	perror("Error Buffer");
+//   	}
+
+//   	char *PKfilename;
+//   	char *SKfilename;
+//   	PKfilename = tmpnam(PKfilename);
+  	
+//   	FILE *fp = fopen(PKfilename, "wb");
+  	
+//     /* for Public Key BER output */
+//     if(!fp) {
+//     	perror(PKfilename);
+//     	exit(1);
+//     }
+
+//     ec = der_encode(&asn_DEF_MPKCPublicKey, PK, write_out, fp);
+
+//     if(ec.encoded == -1) {
+//       	fprintf(stderr, "Could not encode MPKC Key (at %s)\n",
+//       	ec.failed_type ? ec.failed_type->name : "unknown");
+//       	return -1;
+//     }
+
+//     fclose(fp);
+
+//     // xer_fprint(stdout, &asn_DEF_MPKCPublicKey, PK);
+
+//     SKfilename = tmpnam(SKfilename);
+
+//     fp = fopen(SKfilename, "wb");
+
+//     /* for Private Key BER output */
+//     if(!fp) {
+//     	perror(SKfilename);
+//     	exit(1);
+//     }
+
+//     ec = der_encode(&asn_DEF_MPKCPrivateKey, SK, write_out, fp);
+    
+//     if(ec.encoded == -1) {
+//       	fprintf(stderr, "Could not encode MPKC Key (at %s)\n",
+//       	ec.failed_type ? ec.failed_type->name : "unknown");
+//       	return -1;
+//     }
+
+//     fclose(fp);
+
+//     base64encodeKeyPair(PKfilename, SKfilename, output);
+
+// 	remove(PKfilename);
+// 	remove(SKfilename);
+
+// 	// xer_fprint(stdout, &asn_DEF_MPKCPrivateKey, SK);
+
+//     return 0;
+// }
+
+char *encodeKeyPair(char cryptosystem[], 
   const char *pk, const unsigned long long pklen,
-  const char *sk, const unsigned long long sklen,
-  char output[])
+  const char *sk, const unsigned long long sklen)
 {
-  	MPKCPublicKey_t *PK; /* MPKC Public Key Structure */
-  	MPKCPrivateKey_t *SK; /* MPKC Private Key Structure */
+	MPKCKeypair_t *Keypair;
   	asn_enc_rval_t ec;      /* Encoder return value  */
+  	char *Keypairfilename = "";
 
-  	PK = (MPKCPublicKey_t *)calloc(1, sizeof(MPKCPublicKey_t));
-  	if(!PK) {
-    	perror("Public Key calloc() failed");
+  	Keypair = (MPKCKeypair_t *)calloc(1, sizeof(MPKCKeypair_t));
+  	if(!Keypair) {
+    	perror("Keypair calloc() failed");
     	exit(1);
   	}
 
-  	SK = (MPKCPrivateKey_t *)calloc(1, sizeof(MPKCPrivateKey_t));
-  	if(!SK) {
-    	perror("Private Key calloc() failed");
-    	exit(1);
-  	}
-
-  	if(OCTET_STRING_fromBuf(&PK->version, &cryptosystem[0], strlen(cryptosystem)) < 0) {
+  	if(OCTET_STRING_fromBuf(&Keypair->version, &cryptosystem[0], strlen(cryptosystem)) < 0) {
     	perror("Error Buffer");
   	}
 
-  	if(OCTET_STRING_fromBuf(&PK->key, pk, pklen) < 0) {
+  	if(OCTET_STRING_fromBuf(&Keypair->pubkey, pk, pklen) < 0) {
     	perror("Error Buffer");
   	}
 
-  	if(OCTET_STRING_fromBuf(&SK->version, &cryptosystem[0], strlen(cryptosystem)) < 0) {
+  	if(OCTET_STRING_fromBuf(&Keypair->privkey, sk, sklen) < 0) {
     	perror("Error Buffer");
   	}
-
-  	if(OCTET_STRING_fromBuf(&SK->key, sk, sklen) < 0) {
-    	perror("Error Buffer");
-  	}
-
-  	char *PKfilename;
-  	char *SKfilename;
-  	PKfilename = tmpnam(PKfilename);
-  	
-  	FILE *fp = fopen(PKfilename, "wb");
-  	
-    /* for Public Key BER output */
+  	Keypairfilename = tmpnam(nullptr);
+  	FILE *fp = fopen(Keypairfilename, "wb");
+  	/* for Public Key BER output */
     if(!fp) {
-    	perror(PKfilename);
+    	perror(Keypairfilename);
     	exit(1);
     }
-
-    ec = der_encode(&asn_DEF_MPKCPublicKey, PK, write_out, fp);
-
+    ec = der_encode(&asn_DEF_MPKCKeypair, Keypair, write_out, fp);
     if(ec.encoded == -1) {
       	fprintf(stderr, "Could not encode MPKC Key (at %s)\n",
       	ec.failed_type ? ec.failed_type->name : "unknown");
-      	return -1;
     }
-
-    fclose(fp);
+    
+    fclose(fp);    
 
     // xer_fprint(stdout, &asn_DEF_MPKCPublicKey, PK);
 
-    SKfilename = tmpnam(SKfilename);
-
-    fp = fopen(SKfilename, "wb");
-
-    /* for Private Key BER output */
-    if(!fp) {
-    	perror(SKfilename);
-    	exit(1);
-    }
-
-    ec = der_encode(&asn_DEF_MPKCPrivateKey, SK, write_out, fp);
-    
-    if(ec.encoded == -1) {
-      	fprintf(stderr, "Could not encode MPKC Key (at %s)\n",
-      	ec.failed_type ? ec.failed_type->name : "unknown");
-      	return -1;
-    }
-
-    fclose(fp);
-
-    base64encodeKeyPair(PKfilename, SKfilename, output);
-
-	remove(PKfilename);
-	remove(SKfilename);
-
-	// xer_fprint(stdout, &asn_DEF_MPKCPrivateKey, SK);
-
-    return 0;
+    return Keypairfilename;
 }
 
 MPKCPrivateKey_t *decodePrivateKey(char *tmpfile)
