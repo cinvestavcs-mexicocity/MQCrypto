@@ -35,7 +35,7 @@ int writeBinaryFile(secure_string input, char *output)
 {
   std::ofstream outstream(output, std::ios::out | std::ios::binary);
 
-  outstream.write(input, input.length());
+  outstream.write(input.c_str(), input.length());
 
   outstream.close();
 }
@@ -200,7 +200,7 @@ int generateKeypairExec(char **line, uint8_t argc)
     rename(Keypairfilename, output);
     readBinaryFile(output, &content, &len);
     std::cout<<"Keypair saved in file: "<<output<<"\n";
-    return 1;
+    // return 1;
   }
 
   crypto_hash_sha256(out256, (const unsigned char *)pass_phrase, strlen(pass_phrase));
