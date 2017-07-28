@@ -1,0 +1,36 @@
+reset() # Erase all previously defined variables
+
+from .. import Asn1
+from .. import MPKC.Matsumoto.Sflash
+#load('asn1.sage')
+###################################################
+#                  Initialization                 #
+###################################################
+
+if (len( sys.argv ) < 1):
+	print "Operation required\n"
+	sys.exit(1)
+
+encoder = asn1("BER")
+import binascii
+
+op = sys.argv[1]
+print(op)
+if op == '--gen':
+	print 'Generating'
+	#Generate key pair for SFLASH
+	dir = sys.argv[2]
+	os.system("sage sflash_keygen.sage " + dir)
+if op == '--text':
+	print 'Reading'
+	dir = sys.argv[2]
+	f = open(dir, 'rb')
+	print binascii.hexlify(f.read())
+	pubBer = encoder.decode(binascii.hexlify(f.read()), 'hex')
+	print('Public System:\n')
+	print(pubBer[0][1])
+if op == '--sign':
+	print 'Signing'
+	#Generate a signature from stored private key
+	ValueError('Not IMplemented')
+	

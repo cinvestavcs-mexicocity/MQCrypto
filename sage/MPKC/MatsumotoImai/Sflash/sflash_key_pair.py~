@@ -1,0 +1,40 @@
+#load('mi_key_pair.sage')
+from ..mi_key_pair import *
+impor binascii
+
+''' Sflash key storage classes '''
+
+''' Sflash class for public key. Consists only of the public quadratic system
+'''
+class SflashPublicKey(MIPublicKey):
+    def __init__(self):
+        super(SflashPublicKey,self).__init__()
+    
+    def __init__(self, system):
+        super(SflashPublicKey,self).__init__(None, None, system)
+            
+''' Class for Sflash private key. It consists of a pair of affine transformations S, T, the parameter \theta for quadratic function Q and a random bit string of 10 bytes
+'''
+class SflashPrivateKey(MIPrivateKey):
+    '''
+        s: Affine transformation (Fq)^n -> (Fq)^n
+        t: Affine transformation (Fq)^m -> (Fq)^m
+    '''
+    def __init__(self,affine1,affine2):
+        super(SflashPrivateKey,self).__init__(None, None, affine1, affine2, 11)
+        d = bytearray(10)
+        self.delta = binascii.hexlify(bytearray(map(lambda a:a+floor(random()*256),d)))
+    
+    def __init__(self,affine1,affine2,delta):
+        super(SflashPrivateKey,self).__init__(None, None, affine1, affine2, 11)
+        self.delta = delta
+    
+    def getAffine1(self):
+        return self.affine1
+            
+    def getAffine2(self):
+        return self.affine2
+        
+    def getDelta(self):
+        #return bytearray(10)
+		return self.delta

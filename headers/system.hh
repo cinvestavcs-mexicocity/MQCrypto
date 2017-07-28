@@ -7,6 +7,9 @@
 #include <fstream>
 #include <pstream.h>
 
+#include <termios.h>
+#include <unistd.h>
+
 #include <rainbow/rainbow_w.h>
 #include <rainbow/conversion.h>
 #include <rainbowbin/gf.h>
@@ -15,11 +18,13 @@
 
 #include <pflash/SignScheme.h>
 
-#include "rainbow5640_sizes.h"
-#include "rainbow6440_sizes.h"
-#include "rainbow16242020_sizes.h"
-#include "rainbow256181212_sizes.h"
+#include "rainbow5640.h"
+#include "rainbow6440.h"
+#include "rainbow16242020.h"
+#include "rainbow256181212.h"
 #include "4HFE.h"
+#include "3icp.h"
+#include "tts6440.h"
 
 extern "C" {
 	#include <ASN1Encode.h>
@@ -38,6 +43,28 @@ extern "C" {
 #endif
 
 #include <sodium.h>
+
+void SetStdinEcho(bool enable);
+
+int readFile(const char *filename, std::string *content, unsigned long long *len);
+
+void writeBinaryFile(secure_string input, char *output);
+
+int readFile(const char *filename, secure_string *content, unsigned long long *len);
+
+int readBinaryFile(const char *filename, std::string *content, unsigned long long *len);
+
+void writeEncryptedFile(unsigned char *input, char *output, unsigned long long len);
+
+int validateScheme(char *scheme);
+
+void printSchemes(void);
+
+int generateKeypairExec(char **line, uint8_t argc);
+
+int keysExec(char **line, uint8_t argc);
+
+void keysHelp(void);
 
 int readFile(const char *filename, std::string *content, unsigned long long *len);
 

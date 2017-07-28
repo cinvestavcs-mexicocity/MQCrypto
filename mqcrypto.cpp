@@ -1,14 +1,45 @@
+#include "aes.hh"
 #include "system.hh"
 #include "encoding.hh"
 #include "keypair.hh"
 #include "signature.hh"
 #include "encrypt.hh"
-#include "aes.hh"
 #include "bz2.hh"
 
 #define LSH_RL_BUFSIZE 1024
 #define LSH_TOK_BUFSIZE 64
 #define LSH_TOK_DELIM " \t\r\n\a"
+
+void SetStdinEcho(bool enable = true)
+{
+    struct termios tty;
+    tcgetattr(STDIN_FILENO, &tty);
+    if( !enable )
+        tty.c_lflag &= ~ECHO;
+    else
+        tty.c_lflag |= ECHO;
+
+    (void) tcsetattr(STDIN_FILENO, TCSANOW, &tty);
+}
+
+void keyHeader(const char *filename, char *header, char *footer, std::string b64content, unsigned long long len)
+{
+  FILE *fp = fopen(filename, "w");
+
+  fprintf(fp, header);
+
+  int l,start = 0;
+  l = strlen("pc/sqfu3kOpjNeChthxPgkMsaEfbkudVpNv28J0sAOJhoqCl/duqLx8hk5866pcC+ceXrESl");
+  while(start < len)
+  {
+    fprintf(fp, (char *)(b64content.substr(start, l) + "\n").c_str());
+    start += l;
+  }
+
+  fprintf(fp, footer);
+
+  fclose(fp);
+}
 
 int readFile(const char *filename, std::string *content, unsigned long long *len)
 {
@@ -31,13 +62,34 @@ int readFile(const char *filename, std::string *content, unsigned long long *len
   return 0;
 }
 
-int writeBinaryFile(secure_string input, char *output)
+void writeFile(std::string input, char *output)
+{
+  std::ofstream outstream(output, std::ios::out);
+
+  outstream.write(input.c_str(), input.length());
+
+  outstream.close();
+}
+
+void writeBinaryFile(std::string input, char *output)
 {
   std::ofstream outstream(output, std::ios::out | std::ios::binary);
 
   outstream.write(input.c_str(), input.length());
 
   outstream.close();
+}
+
+void writeEncryptedFile(unsigned char *input, char *output, unsigned long long len)
+{
+  FILE *out;
+  out = fopen(output, "wb");
+
+  if(out)
+  {
+    fwrite(input, len, 1, out);
+    fclose(out);
+  }
 }
 
 int readFile(const char *filename, secure_string *content, unsigned long long *len)
@@ -61,22 +113,23 @@ int readFile(const char *filename, secure_string *content, unsigned long long *l
   return 0;
 }
 
-int readBinaryFile(const char *filename, secure_string *content, unsigned long long *len)
+int readBinaryFile(const char *filename, std::string *content, unsigned long long *len)
 {
-  secure_string line;
+  std::string line;
   std::ifstream input(filename, std::ios::in | std::ios::binary);
 
   if(input.is_open())
   {
-    while(getline(input, line))
-    {
-      *content += line;
-    }
-    *len = (unsigned long long)content->size();
+    input.seekg(0, std::ios::end);
+    line.resize(input.tellg());
+    input.seekg(0, std::ios::beg);
+    input.read(&line[0], line.size());
     input.close();
+    *len = (unsigned long long)line.size();
+    *content = line;
   } else
   {
-    std::cout << "ERROR: File not found";
+    std::cout << "ERROR: File not found "<<filename;
     return -1;
   }
   return 0;
@@ -85,7 +138,8 @@ int readBinaryFile(const char *filename, secure_string *content, unsigned long l
 int validateScheme(char *scheme)
 {
   char *listOfSchemes[] = {"rainbow5640", "rainbow6440", "rainbow16242020", 
-                          "rainbow256181212", "pflash", "sflashv2", "hfe"};
+                          "rainbow256181212", "pflash", "sflashv1", "sflashv2",
+                          "hfe", "3icp", "tts6440", "uov"};
   size_t n = sizeof(listOfSchemes) / sizeof(listOfSchemes[0]);
   for(uint8_t i = 0; i < n; i++)
     if(strcmp(scheme, listOfSchemes[i]) == 0)
@@ -110,19 +164,19 @@ int generateKeypairExec(char **line, uint8_t argc)
   char *scheme = "";
   char *output = "";
   char *symencryption = "";
-  char *pass_phrase = "";
-  bool ascii = false;
+  std::string pass_phrase = "";
+  bool ascii = true;
   bool zip = false;
 
   char *Keypairfilename = "";
-  char b64tmp[L_tmpnam];
+  std::string asn1bin;
 
   unsigned char out256[32];
   unsigned char out128[32];
 
-  secure_string content = "";
-  secure_string cipher_text = "";
-  secure_string plain_text = "";
+  // secure_string content = "";
+  // secure_string cipher_text = "";
+  // secure_string plain_text = "";
   uint64_t len;
 
   for(uint8_t i = 0; i < argc; i++)
@@ -135,8 +189,8 @@ int generateKeypairExec(char **line, uint8_t argc)
     {
       output = line[i+1];
       i+=1;
-    } else if(strcmp(line[i], "-a") == 0)
-      ascii = true;
+    } //else if(strcmp(line[i], "-a") == 0)
+      //ascii = true;
     else if(strcmp(line[i], "-zip") == 0)
       zip = true;
     else if(strcmp(line[i], "-passout") == 0)
@@ -157,13 +211,7 @@ int generateKeypairExec(char **line, uint8_t argc)
     }
   }
 
-  // std::cout<<"Scheme: " << scheme << "\n";
-  // std::cout<<"Output: " << output << "\n";
-  // std::cout<<"Symmetric Encryption: " << symencryption << "\n";
-  // std::cout<<"Password: " << pass_phrase << "\n";
-  // std::cout<<"ASCII: " << ascii << "\n";
-
-  if(strcmp(scheme, "") == 0 || strcmp(output, "") == 0 || strcmp(pass_phrase, "") == 0)
+  if(strcmp(scheme, "") == 0 || strcmp(output, "") == 0)
   {
     printf("ERROR: Invalid input format\n");
     generateKeypairHelp();
@@ -177,79 +225,660 @@ int generateKeypairExec(char **line, uint8_t argc)
     return 1;
   }
 
-  Keypairfilename = generateKeypair(scheme);
-
-  if(ascii && zip)
+  if(pass_phrase == "")
   {
-    tmpnam(b64tmp);
-    base64encodeKeyPair(Keypairfilename,b64tmp);
-    bz2_compress(b64tmp, output);
-    readBinaryFile(output, &content, &len);
-    remove(b64tmp);
-  } else if(ascii)
-  {
-    base64encodeKeyPair(Keypairfilename,output);
-    readFile(output, &content, &len);
-    std::cout<<"Keypair saved in file: "<<output<<"\n";
-  } else if(zip)
-  {
-    bz2_compress_bin(Keypairfilename, output);
-    readBinaryFile(output, &content, &len);
-  } else
-  {
-    rename(Keypairfilename, output);
-    readBinaryFile(output, &content, &len);
-    std::cout<<"Keypair saved in file: "<<output<<"\n";
-    // return 1;
+      SetStdinEcho(false);
+      std::cout<<"Please enter a pass phrase: ";
+      std::cin >> pass_phrase;
+      std::cout<<"\n";
+      SetStdinEcho(true);
   }
 
-  crypto_hash_sha256(out256, (const unsigned char *)pass_phrase, strlen(pass_phrase));
+  Keypairfilename = generateKeypair(scheme);
+
+  if(strcmp(Keypairfilename, "") == 0)
+  {
+    generateKeypairHelp();
+    return 1;
+  }
+
+  readBinaryFile(Keypairfilename, &asn1bin, &len);
+  
+  crypto_hash_sha256(out256, (const unsigned char *)pass_phrase.c_str(), strlen(pass_phrase.c_str()));
   crypto_hash_sha256(out128, out256, 32);
 
+  /* Initialise the library */
+  ERR_load_crypto_strings();
+  OpenSSL_add_all_algorithms();
+  OPENSSL_config(NULL);
+
+  int ciphertext_len;
+  unsigned char cipher_text[len + 100];
   if(strcmp(symencryption, "aes_128_cbc") == 0)
   {
-    EVP_add_cipher(EVP_aes_128_cbc());
-    aes_128_cbc_encrypt(out256, &out128[15], content, cipher_text);
-    // aes_128_cbc_decrypt(out256, &out128[15], cipher_text, plain_text);
+    /* Encrypt the plaintext */
+    ciphertext_len = c_aes_256_cbc_encrypt((unsigned char *)asn1bin.c_str(), len, out256, &out128[15], cipher_text);
   }
   else if(strcmp(symencryption, "aes_192_cbc") == 0)
   {
-    EVP_add_cipher(EVP_aes_192_cbc());
-    aes_192_cbc_encrypt(out256, &out128[15], content, cipher_text);
-    // aes_192_cbc_decrypt(out256, &out128[15], cipher_text, plain_text);
+    ciphertext_len = c_aes_256_cbc_encrypt((unsigned char *)asn1bin.c_str(), len, out256, &out128[15], cipher_text);
   }
-  else if(strcmp(symencryption, "aes_256_cbc") == 0)
+  else
   {
-    EVP_add_cipher(EVP_aes_256_cbc());
-    aes_256_cbc_encrypt(out256, &out128[15], content, cipher_text);
-    // aes_256_cbc_decrypt(out256, &out128[15], cipher_text, plain_text);
+    ciphertext_len = c_aes_256_cbc_encrypt((unsigned char *)asn1bin.c_str(), len, out256, &out128[15], cipher_text);
+    // decryptedtext_len = c_aes_256_cbc_decrypt(cipher_text, ciphertext_len, out256, &out128[15], plain_text);
   }
 
-  writeBinaryFile(cipher_text, output);
+  char encryptedKey[] = "/var/tmp/enc_XXXXXX";
+  mkstemp(encryptedKey);
 
-  // std::cout<<"Content: "<<content<<"\n";
-  // std::cout<<"cipher_text: "<<cipher_text.length()<<"\n";
-  // std::cout<<"SIZEOF: "<<sizeof((uint8_t *)cipher_text.c_str())<<"\n";
-  // std::cout<<"STRLEN: "<<strlen((uint8_t *)cipher_text.c_str())<<"\n";
-  // std::cout<<"STRLEN PText: "<<strlen((char *)plain_text.c_str())<<"\n";
-  // std::cout<<"IGUALES: "<<strcmp((char *)plain_text.c_str(), (char *)content.c_str())<<"\n";
+  writeEncryptedFile(cipher_text, encryptedKey, ciphertext_len);
+  
+  char b64Key[] = "/var/tmp/b64_XXXXXX";
+  mkstemp(b64Key);
+  base64encodeKeyPair(encryptedKey, b64Key);
+  std::string b64content = "";
+  readFile(b64Key, &b64content, &len);
+  
+  FILE *b64EncFile = fopen(b64Key, "w");
 
+  fprintf(b64EncFile, "-----BEGIN MPKC KEYPAIR-----\n");
+  
+  if(strcmp(symencryption, "aes_128_cbc") == 0)
+    fprintf(b64EncFile, "ENC:AES-128-CBC;\n\n");
+  else if(strcmp(symencryption, "aes_192_cbc") == 0)
+    fprintf(b64EncFile, "ENC:AES-192-CBC;\n\n");
+  else
+    fprintf(b64EncFile, "ENC:AES-256-CBC\n\n");
+
+  int l,start = 0;
+  l = strlen("pc/sqfu3kOpjNeChthxPgkMsaEfbkudVpNv28J0sAOJhoqCl/duqLx8hk5866pcC+ceXrESl");
+  while(start < len)
+  {
+    fprintf(b64EncFile, (char *)(b64content.substr(start, l) + "\n").c_str());
+    start += l;
+  }
+
+  fprintf(b64EncFile, "-----END MPKC KEYPAIR-----");
+
+  fclose(b64EncFile);
+
+  if(zip)
+  {
+    bz2_compress(b64Key, output);
+    remove(b64Key);
+    std::cout<<"Keypair saved in file "<<output<<".bzip2\n";
+  }
+  else {
+    rename(b64Key, output);
+    std::cout<<"Keypair saved in file "<<output<<"\n";
+  }
 
   remove(Keypairfilename);
+  remove(encryptedKey);
 
   return 1;
+}
+
+int keysExec(char **command, uint8_t argc)
+{
+  std::string inputKeypair = "";
+  bool zip = false;
+
+  char *outputPublic = "";
+  char *outputPrivate = "";
+
+  char line[256];
+  std::string content = "";
+  uint64_t len;
+  std::string cipher_text = "";
+
+  std::string b64content = "";
+
+  unsigned char out256[32];
+  unsigned char out128[32];
+
+  std::string pass_phrase = "";
+
+  inputKeypair = command[0];
+
+  for(uint8_t i = 1; i < argc; i++)
+  {
+    if(strcmp(command[i], "-pubout") == 0)
+    {
+      outputPublic = command[i+1];
+      i+=1;
+    } else if(strcmp(command[i], "-privout") == 0)
+    {
+      outputPrivate = command[i+1];
+      i+=1;
+    } else if(strcmp(command[i], "-passin") == 0)
+    {
+      pass_phrase = &command[i+1][5];
+      i+=1;
+    } else if(strcmp(command[i], "-zip") == 0)
+      zip = true;
+    else
+    {
+      printf("ERROR: Invalid option: %s\n",command[i]);
+      keysHelp();
+      return 1;
+    }
+  }
+
+  /*
+    CHECK FILE EXTENSION
+      - If zipped file is used, decompress it to read the content.
+  */
+  if(inputKeypair.substr(inputKeypair.length()-4, 4) == ".bz2")
+  {
+    std::string bz2tmp = "/var/tmp/bz2_XXXXXX";
+    mkstemp((char *)bz2tmp.c_str());
+    bz2_decompress(inputKeypair, bz2tmp);
+    inputKeypair = bz2tmp;
+  }
+
+  /*
+    CHECK WHETHER IT IS A KEYPAIR FILE
+      - Checks if the input key belongs to a keypair.
+      - The Encryption algorithm is saved to the line variable.
+  */
+  FILE *fp = fopen((char *)inputKeypair.c_str(), "rb");
+
+  fgets(line, sizeof(line), fp);
+  if(strcmp(line, "-----BEGIN MPKC KEYPAIR-----\n") != 0)
+  {
+    std::cout<<"ERROR: Input file \""<<inputKeypair<<"\" does not contain a keypair.\n\n";
+    fclose(fp);
+    return 1;
+  }
+
+  fgets(line, sizeof(line), fp);
+
+  fclose(fp);
+  
+  /*
+    REQUEST PASS PHRASE
+      - Pass phrase is required for decryption of the keypair file.
+  */
+  if(pass_phrase == "")
+  {
+      SetStdinEcho(false);
+      std::cout<<"Please enter your pass phrase: ";
+      std::cin >> pass_phrase;
+      std::cout<<"\n";
+      SetStdinEcho(true);
+  }
 
 
-  // tmpnam(bz2Out);
+  readFile((char *)inputKeypair.c_str(), &content, &len);
+  std::string tmpinput = "/var/tmp/input_XXXXXX";
+  mkstemp((char *)tmpinput.c_str());
+  writeFile(content.substr(43, content.length() - 69), (char *)tmpinput.c_str());
+  // // std::cout<<content.substr(43, content.length() - 69)<<"\n";
 
-  // bz2_compress_bin(Keypairfilename, bz2Out);
+  /*
+    BASE64 DECODING
+      - The input key file is base64 decoded.
+  */
+  std::string b64decoded = "/var/tmp/enc_XXXXXX";
+  mkstemp((char *)b64decoded.c_str());
+  base64decodeKeyPair(tmpinput, b64decoded);
+  // std::cout<<"B64 DECODED: "<<b64decoded<<"\n";
 
-  // char *b64tmp = tmpnam(bz2Out);
+  /*
+    READ THE CIPHER TEXT OF THE DECODED INPUT FILE
+  */
+  readBinaryFile((char *)b64decoded.c_str(), &cipher_text, &len);
 
-  // base64encodeKeyPair(Keypairfilename, b64tmp);
+  crypto_hash_sha256(out256, (const unsigned char *)pass_phrase.c_str(), strlen(pass_phrase.c_str()));
+  crypto_hash_sha256(out128, out256, 32);
 
-  // bz2_compress(b64tmp, "keys/private-key.pem");
-  // remove(Keypairfilename);
+  /* Initialise the library */
+  ERR_load_crypto_strings();
+  OpenSSL_add_all_algorithms();
+  OPENSSL_config(NULL);
+
+  int decryptedtext_len;
+  unsigned char plain_text[len + 100];
+  // std::cout<<"CIPHER TEXT LENGTH: "<<len<<"\n";
+  if(strcmp(&line[4], "AES-256-CBC\n") == 0)
+  {
+    decryptedtext_len = c_aes_256_cbc_decrypt((unsigned char *)cipher_text.c_str(), len, out256, &out128[15], plain_text);
+  } else if(strcmp(&line[4], "AES-192-CBC\n") == 0)
+  {
+    decryptedtext_len = c_aes_256_cbc_decrypt((unsigned char *)cipher_text.c_str(), len, out256, &out128[15], plain_text);
+  } else if(strcmp(&line[4], "AES-128-CBC\n") == 0)
+  {
+    decryptedtext_len = c_aes_256_cbc_decrypt((unsigned char *)cipher_text.c_str(), len, out256, &out128[15], plain_text);
+  }
+
+  // std::cout<<"DECRYPTED LENGTH: "<<decryptedtext_len<<"\n";
+
+
+  char asn1tmp[] = "/var/tmp/asn1_XXXXXX";
+  mkstemp(asn1tmp);
+  writeEncryptedFile(plain_text, asn1tmp, decryptedtext_len);
+
+  if(strcmp(outputPublic, "") != 0)
+  {
+    char pubtmp[] = "/var/tmp/pub_XXXXXX";
+    mkstemp(pubtmp);
+    char pubb64tmp[] = "/var/tmp/pubb64_XXXXXX";
+    mkstemp(pubb64tmp);
+    extractPublicKey(plain_text, pubtmp, decryptedtext_len);
+    base64encodeKeyPair(pubtmp, pubb64tmp);
+    b64content = "";
+    readFile(pubb64tmp, &b64content, &len);
+    keyHeader(outputPublic, "-----BEGIN MPKC PUBLIC KEY-----\n", "-----BEGIN MPKC PUBLIC KEY-----", b64content, len);
+    remove(pubtmp);
+    remove(pubb64tmp);
+    if(zip)
+    {
+      rename(outputPublic, pubtmp);
+      bz2_compress(pubtmp, outputPublic);
+      remove(pubtmp);
+      std::cout<<"Public key saved in "<<outputPublic<<".bzip2\n";
+    } else
+      std::cout<<"Public key saved in "<<outputPublic<<"\n";
+  }
+
+  if(strcmp(outputPrivate, "") != 0)
+  {
+    char privtmp[] = "/var/tmp/priv_XXXXXX";
+    mkstemp(privtmp);
+    char privb64tmp[] = "/var/tmp/privb64_XXXXXX";
+    mkstemp(privb64tmp);
+    extractPrivateKey(plain_text, privtmp, decryptedtext_len);
+    base64encodeKeyPair(privtmp, privb64tmp);
+    b64content = "";
+    readFile(privb64tmp, &b64content, &len);
+    keyHeader(outputPrivate, "-----BEGIN MPKC PRIVATE KEY-----\n", "-----BEGIN MPKC PRIVATE KEY-----", b64content, len);
+    remove(privtmp);
+    remove(privb64tmp);
+    if(zip)
+    {
+      rename(outputPrivate, privtmp);
+      bz2_compress(privtmp, outputPrivate);
+      remove(privtmp);
+      std::cout<<"Private key saved in "<<outputPrivate<<".bzip2\n";
+    } else
+      std::cout<<"Private key saved in "<<outputPrivate<<"\n";
+  }
+
+  remove(asn1tmp);
+  remove((char *)b64decoded.c_str());
+  remove((char *)tmpinput.c_str());
+
+  return 1;
+}
+
+int signExec(char **command, uint8_t argc)
+{
+  char *dgst = "";
+  char *inputFile = "";
+  char *signedFile = "";
+  std::string pass_phrase = "";
+  bool zip = false;
+
+  std::string inputKeypair = command[0];
+  char line[256];
+  char *keytype;
+
+  unsigned char out256[32];
+  unsigned char out128[32];
+
+  std::string content = "";
+  uint64_t len;
+
+  for(uint8_t i = 1; i < argc; i++)
+  {
+    if(strcmp(command[i], "-in") == 0)
+    {
+      inputFile = command[i+1];
+      i+=1;
+    } else if(strcmp(command[i], "-out") == 0)
+    {
+      signedFile = command[i+1];
+      i+=1;
+    } else if(strcmp(command[i], "-passin") == 0)
+    {
+      pass_phrase = &command[i+1][5];
+      i+=1;
+    } else if(strcmp(command[i], "-sha256") == 0)
+      dgst = "sha256";
+    else if(strcmp(command[i], "-sha512") == 0)
+      dgst = "sha512";
+    else if(strcmp(command[i], "-zip") == 0)
+      zip = true;
+    else
+    {
+      printf("ERROR: Invalid option: %s\n",command[i]);
+      signHelp();
+      return 1;
+    }
+  }
+
+  /*
+    CHECK FILE EXTENSION
+      - If zipped file is used, decompress it to read the content.
+  */
+  if(inputKeypair.substr(inputKeypair.length()-4, 4) == ".bz2")
+  {
+    std::string bz2tmp = "/var/tmp/bz2_XXXXXX";
+    mkstemp((char *)bz2tmp.c_str());
+    bz2_decompress(inputKeypair, bz2tmp);
+    inputKeypair = bz2tmp;
+  }
+
+  readFile((char *)inputKeypair.c_str(), &content, &len);
+  std::string tmpinput = "/var/tmp/input_XXXXXX";
+  mkstemp((char *)tmpinput.c_str());
+
+  /*
+    CHECK WHETHER IT IS A KEYPAIR FILE
+      - Checks if the input key belongs to a keypair.
+      - The Encryption algorithm is saved to the line variable.
+  */
+  FILE *fp = fopen((char *)inputKeypair.c_str(), "rb");
+
+  fgets(line, sizeof(line), fp);
+  if(strcmp(line, "-----BEGIN MPKC KEYPAIR-----\n") == 0)
+  {
+    if(pass_phrase == "")
+    {
+        SetStdinEcho(false);
+        std::cout<<"Please enter your pass phrase: ";
+        std::cin >> pass_phrase;
+        std::cout<<"\n";
+        SetStdinEcho(true);
+    }
+
+    fgets(line, sizeof(line), fp);
+
+    keytype = "keypair";
+
+    writeFile(content.substr(43, content.length() - 69), (char *)tmpinput.c_str());
+  } else if(strcmp(line, "-----BEGIN MPKC PRIVATE KEY-----\n") == 0)
+  {
+    keytype = "private";
+    writeFile(content.substr(32, content.length() - 62), (char *)tmpinput.c_str());
+  }
+  else
+  {
+    std::cout<<"ERROR: Bad key file, a private key is required.\n";
+    return 1;
+  }
+
+  fclose(fp);
+
+  /*
+    BASE64 DECODING
+      - The input key file is base64 decoded.
+  */
+  std::string b64decoded = "/var/tmp/enc_XXXXXX";
+  mkstemp((char *)b64decoded.c_str());
+  base64decodeKeyPair(tmpinput, b64decoded);
+
+  char signtmp[] = "/var/tmp/sign_XXXXXX";
+  mkstemp(signtmp);
+
+  if(strcmp(keytype, "keypair") == 0)
+  {
+    std::string cipher_text;
+    /*
+      READ THE CIPHER TEXT OF THE DECODED INPUT FILE
+    */
+    readBinaryFile((char *)b64decoded.c_str(), &cipher_text, &len);
+
+    crypto_hash_sha256(out256, (const unsigned char *)pass_phrase.c_str(), strlen(pass_phrase.c_str()));
+    crypto_hash_sha256(out128, out256, 32);
+
+    /* Initialise the library */
+    ERR_load_crypto_strings();
+    OpenSSL_add_all_algorithms();
+    OPENSSL_config(NULL);
+  
+    int decryptedtext_len;
+    unsigned char plain_text[len + 100];
+    // std::cout<<"CIPHER TEXT LENGTH: "<<len<<"\n";
+    if(strcmp(&line[4], "AES-256-CBC\n") == 0)
+    {
+      decryptedtext_len = c_aes_256_cbc_decrypt((unsigned char *)cipher_text.c_str(), len, out256, &out128[15], plain_text);
+    } else if(strcmp(&line[4], "AES-192-CBC\n") == 0)
+    {
+      decryptedtext_len = c_aes_256_cbc_decrypt((unsigned char *)cipher_text.c_str(), len, out256, &out128[15], plain_text);
+    } else if(strcmp(&line[4], "AES-128-CBC\n") == 0)
+    {
+      decryptedtext_len = c_aes_256_cbc_decrypt((unsigned char *)cipher_text.c_str(), len, out256, &out128[15], plain_text);
+    }
+
+    MPKCPrivateKey_t *Private = getPrivateKey(plain_text, decryptedtext_len);
+
+    sign(inputFile, Private, dgst, signtmp);
+  } else {
+    sign(inputFile, (char *)b64decoded.c_str(), dgst, signtmp);
+  }
+
+  content = "";
+  readFile(signtmp, &content, &len);
+
+  keyHeader(signedFile, "-----BEGIN MPKC SIGNATURE-----\n", "-----END MPKC SIGNATURE-----", content, len);
+
+  if(zip)
+  {
+    char asn1tmp[] = "/var/tmp/asn1_XXXXXX";
+    mkstemp(asn1tmp);
+    rename(signedFile, asn1tmp);
+    bz2_compress(asn1tmp, signedFile);
+    remove(asn1tmp);
+    std::cout<<"Signature saved in: "<<signedFile<<".bz2\n";
+  } else
+    std::cout<<"Signature saved in: "<<signedFile<<"\n";
+
+  std::cout<<"\n";
+
+  remove(signtmp);
+  remove((char *)b64decoded.c_str());
+  remove((char *)tmpinput.c_str());
+
+  return 1;
+}
+
+int verifyExec(char **command, uint8_t argc)
+{
+  char *inputFile = "";
+  std::string signedFile = "";
+  std::string pass_phrase = "";
+
+  std::string inputKeypair = command[0];
+  char line[256];
+  char *keytype;
+
+  unsigned char out256[32];
+  unsigned char out128[32];
+
+  std::string content = "";
+  uint64_t len;
+
+  for(uint8_t i = 1; i < argc; i++)
+  {
+    if(strcmp(command[i], "-in") == 0)
+    {
+      inputFile = command[i+1];
+      i+=1;
+    } else if(strcmp(command[i], "-signature") == 0)
+    {
+      signedFile = command[i+1];
+      i+=1;
+    } else if(strcmp(command[i], "-passin") == 0)
+    {
+      pass_phrase = &command[i+1][5];
+      i+=1;
+    } else
+    {
+      printf("ERROR: Invalid option: %s\n",command[i]);
+      verifyHelp();
+      return 1;
+    }
+  }
+
+  /*
+    CHECK FILE EXTENSION
+      - If zipped file is used, decompress it to read the content.
+  */
+  if(inputKeypair.substr(inputKeypair.length()-4, 4) == ".bz2")
+  {
+    std::string bz2tmp = "/var/tmp/bz2_XXXXXX";
+    mkstemp((char *)bz2tmp.c_str());
+    bz2_decompress(inputKeypair, bz2tmp);
+    inputKeypair = bz2tmp;
+  }
+
+  readFile((char *)inputKeypair.c_str(), &content, &len);
+  std::string tmpinput = "/var/tmp/input_XXXXXX";
+  mkstemp((char *)tmpinput.c_str());
+
+  /*
+    CHECK WHETHER IT IS A KEYPAIR FILE
+      - Checks if the input key belongs to a keypair.
+      - The Encryption algorithm is saved to the line variable.
+  */
+  FILE *fp = fopen((char *)inputKeypair.c_str(), "rb");
+
+  fgets(line, sizeof(line), fp);
+  if(strcmp(line, "-----BEGIN MPKC KEYPAIR-----\n") == 0)
+  {
+    if(pass_phrase == "")
+    {
+        SetStdinEcho(false);
+        std::cout<<"Please enter your pass phrase: ";
+        std::cin >> pass_phrase;
+        std::cout<<"\n";
+        SetStdinEcho(true);
+    }
+
+    fgets(line, sizeof(line), fp);
+
+    keytype = "keypair";
+
+    writeFile(content.substr(43, content.length() - 69), (char *)tmpinput.c_str());
+  } else if(strcmp(line, "-----BEGIN MPKC PUBLIC KEY-----\n") == 0)
+  {
+    keytype = "public";
+    writeFile(content.substr(31, content.length() - 60), (char *)tmpinput.c_str());
+  }
+  else
+  {
+    std::cout<<"ERROR: Bad key file, a private key is required.\n";
+    return 1;
+  }
+
+  fclose(fp);
+
+  /* 
+    CHECK SIGNATURE FORMAT
+
+  */
+  if(signedFile.substr(signedFile.length()-4, 4) == ".bz2")
+  {
+    std::string bz2tmp = "/var/tmp/bz2_XXXXXX";
+    mkstemp((char *)bz2tmp.c_str());
+    bz2_decompress(signedFile, bz2tmp);
+    signedFile = bz2tmp;
+  }
+
+  content = "";
+  readFile((char *)signedFile.c_str(), &content, &len);
+  std::string signtmpinput = "/var/tmp/signinput_XXXXXX";
+  mkstemp((char *)signtmpinput.c_str());
+
+  /*
+    CHECK WHETHER IT IS A SIGNATURE FILE
+      - Checks if the input key belongs to a keypair.
+      - The Encryption algorithm is saved to the line variable.
+  */
+  fp = fopen((char *)signedFile.c_str(), "rb");
+
+  char aux[256];
+  fgets(aux, sizeof(aux), fp);
+  if(strcmp(aux, "-----BEGIN MPKC SIGNATURE-----\n") == 0)
+  {
+    writeFile(content.substr(30, content.length() - 58), (char *)signtmpinput.c_str());
+  } else
+  {
+    std::cout<<"ERROR: Bad signature file format.\n";
+    return 1;
+  }
+
+  fclose(fp);
+
+  /*
+    BASE64 DECODING
+      - The input key file is base64 decoded.
+  */
+  std::string b64decoded = "/var/tmp/enc_XXXXXX";
+  mkstemp((char *)b64decoded.c_str());
+  base64decodeKeyPair(tmpinput, b64decoded);
+
+  char signtmp[] = "/var/tmp/sign_XXXXXX";
+  mkstemp(signtmp);
+
+  if(strcmp(keytype, "keypair") == 0)
+  {
+    std::string cipher_text;
+    /*
+      READ THE CIPHER TEXT OF THE DECODED INPUT FILE
+    */
+    readBinaryFile((char *)b64decoded.c_str(), &cipher_text, &len);
+
+    crypto_hash_sha256(out256, (const unsigned char *)pass_phrase.c_str(), strlen(pass_phrase.c_str()));
+    crypto_hash_sha256(out128, out256, 32);
+
+    /* Initialise the library */
+    ERR_load_crypto_strings();
+    OpenSSL_add_all_algorithms();
+    OPENSSL_config(NULL);
+  
+    int decryptedtext_len;
+    unsigned char plain_text[len + 100];
+    // std::cout<<"CIPHER TEXT LENGTH: "<<len<<"\n";
+    if(strcmp(&line[4], "AES-256-CBC\n") == 0)
+    {
+      decryptedtext_len = c_aes_256_cbc_decrypt((unsigned char *)cipher_text.c_str(), len, out256, &out128[15], plain_text);
+    } else if(strcmp(&line[4], "AES-192-CBC\n") == 0)
+    {
+      decryptedtext_len = c_aes_256_cbc_decrypt((unsigned char *)cipher_text.c_str(), len, out256, &out128[15], plain_text);
+    } else if(strcmp(&line[4], "AES-128-CBC\n") == 0)
+    {
+      decryptedtext_len = c_aes_256_cbc_decrypt((unsigned char *)cipher_text.c_str(), len, out256, &out128[15], plain_text);
+    }
+
+    MPKCPublicKey_t *Public = getPublicKey(plain_text, decryptedtext_len);
+
+    verify(inputFile, (char *)signtmpinput.c_str(), Public);
+  } else {
+    readBinaryFile((char *)b64decoded.c_str(), &content, &len);
+    MPKCPublicKey_t *Public = constructPublicKey((unsigned char *)content.c_str(), len);
+    verify(inputFile, (char *)signtmpinput.c_str(), Public);
+  }
+
+  std::cout<<"\n";
+  remove((char *)signtmpinput.c_str());
+  remove((char *)b64decoded.c_str());
+  remove((char *)tmpinput.c_str());
+  remove(signtmp);
+
+  return 1;
+}
+
+void keysHelp(void)
+{
+  printf("keys <keypair.pem> [Options]\n\n");
+  printf("Options:\n");
+  printf("-pubout <public-key.pem>\t\tOutput file to save the public key.\n");
+  printf("-privout <private-key.pem>\t\tOutput file to save the private key.\n");
+  printf("-passin pass:<phrase>\t\t\tPass phrase for decryption of the input keypair.\n\n");
 }
 
 void generateKeypairHelp(void)
@@ -263,8 +892,11 @@ void generateKeypairHelp(void)
   printf("\t\t\t\trainbow16242020\n");
   printf("\t\t\t\trainbow256181212\n");
   printf("\t\t\t\tpflash\n");
+  printf("\t\t\t\tsflash\n");
   printf("\t\t\t\tsflashv2\n");
-  printf("\t\t\t\thfe\n");
+  printf("\t\t\t\tuov\n");
+  printf("\t\t\t\t3icp\n");
+  printf("\t\t\t\ttts6440\n");
 	printf("-out <private-key.pem>\t\tFile to save the generated set of keys, ");
 	printf("the keys will be generate in the files output_PK.bin and output_SK.bin, ");
 	printf("if left in blank the keys will output in the files scheme_PK.bin and scheme_SK.bin\n");
@@ -273,16 +905,17 @@ void generateKeypairHelp(void)
   printf("\t\t\t\taes_128_cbc\taes_192_cbc\taes_256_cbc\n");
   printf("-passout pass:<phrase>\t\tPass phrase used to encrypt the private key.\n");
   printf("-a\t\t\t\tOutput the keypair generated in ASCII mode encoded as Base64, otherwise the output will be output in a binary file.\n\n");
-  printf("-zip\t\t\tUse a compressor on the output key (using bzip2).");
+  // printf("-zip\t\t\tUse a compressor on the output key (using bzip2).\n\n");
 }
 
 void signHelp(void)
 {
-	printf("sign [input] [output] [secret key] [digest]\n");
-	printf("-input\t\t\tInput filename to be signed.\n");
-	printf("-output (Optional)\tOutput file in which to save the signature.\n");
-	printf("-secret key\t\tSecret key to be used for the signing of the input document.\n");
-	printf("-digest\t\t\tDigest algorithm to be used for the signing of the input document.\n");
+	printf("sign <private-key.pem> [Options]\n");
+  printf("Options:\n");
+	printf("-dgst\t\t\tInput filename to be signed.\n");
+	printf("-in <file>\t\tOutput file in which to save the signature.\n");
+	printf("-out <signature>\tSecret key to be used for the signing of the input document.\n");
+  printf("-passin pass:<phrase>\tPass phrase for decryption of the input keypair.\n");
 	printf("\nThe following digest algorithms can be used:\n");
 	printf("sha256\n");
 	printf("sha512\n\n");
@@ -290,10 +923,11 @@ void signHelp(void)
 
 void verifyHelp(void)
 {
-	printf("verify [input] [sign] [public key]\n");
-	printf("-input\t\t\tInput filename of the document that was signed.\n");
-	printf("-sign\t\t\tSignature of the input document that is going to be verifyied.\n");
-	printf("-public key\t\tPublic key to be used for the verification of the signature\n\n");
+	printf("verify <public-key.pem> [Options]\n");
+  printf("Options:\n");
+	printf("-in\t\t\tInput filename of the document that was signed.\n");
+	printf("-signature\t\tSignature of the input document that is going to be verified.\n");
+	printf("-passin pass:<phrase>\tPass phrase for decryption of the input keypair.\n\n");
 }
 
 void encryptHelp(void)
@@ -377,36 +1011,19 @@ int lsh_execute(char **args, uint8_t argc)
   {
   	if(argc > 1)
   	{
-		if(strcmp(args[1], "help") == 0)
-		{
-  			signHelp();
-  			return 1;
-		}
-		if(argc < 4 || argc > 5)
-		{
-			printf("Incorrect use...\n");
-  			signHelp();
-  			return 1;
-		}
-		switch(argc)
-		{
-			case 4:
-				sign(args[1], args[2], args[3]);
-				break;
-			case 5:
-				sign(args[1], args[3], args[4], args[2]);
-				break;
-			default:
-				printf("Incorrect use...\n");
-  				signHelp();
-		}
-		return 1;
-  	} else
-  	{
-  		printf("Incorrect use...\n");
-  		signHelp();
+  		if(strcmp(args[1], "help") == 0)
+  		{
+    			signHelp();
+    			return 1;
+  		}
+      signExec(&args[1], argc - 1);
   		return 1;
-  	}
+    } else
+    {
+    		printf("Incorrect use...\n");
+    		signHelp();
+    		return 1;
+    }
   }
   else if(strcmp(args[0], "verify") == 0)
   {
@@ -417,13 +1034,7 @@ int lsh_execute(char **args, uint8_t argc)
   			verifyHelp();
   			return 1;
   		}
-  		if(argc != 4)
-  		{
-  			printf("Incorrect use...\n");
-  			verifyHelp();
-  			return 1;
-  		}
-  		verify(args[1],args[2],args[3]);
+  		verifyExec(&args[1], argc - 1);
   		return 1;
   	} else
   	{
@@ -431,6 +1042,24 @@ int lsh_execute(char **args, uint8_t argc)
   		verifyHelp();
   		return 1;
   	}
+  }
+  else if(strcmp(args[0], "keys") == 0)
+  {
+    if(argc > 1)
+    {
+      if(strcmp(args[1], "help") == 0)
+      {
+        keysHelp();
+        return 1;
+      }
+      keysExec(&args[1], argc - 1);
+      return 1;
+    } else
+    {
+      printf("Incorrect use...\n");
+      keysHelp();
+      return 1;
+    }
   }
   else if(strcmp(args[0], "encrypt") == 0)
   {

@@ -55,7 +55,9 @@ int encrypt(char *filename, char *PKfilename, char *output)
   	}
 
   	char *Cipherfilename;
-  	Cipherfilename = tmpnam(nullptr);
+  	std::string Cipherfile = "/var/tmp/f_XXXXXX";
+  	// Cipherfilename = tmpnam(nullptr);
+  	Cipherfilename = (char *)Cipherfile.c_str();
 
   	FILE *fp = fopen(Cipherfilename, "wb");
 
@@ -134,6 +136,7 @@ int decrypt(const char *filename, const char *SKfilename)
 		std::cout<<"Decrypt: Fail\nERROR: The public key and encrypted document use different cryptosystems\n";
 		return -1;
 	}
+	return 0;
 }
 
 int decrypt(const char *filename, const char *SKfilename, const char *output)
@@ -192,4 +195,5 @@ int decrypt(const char *filename, const char *SKfilename, const char *output)
 		std::cout<<"Decrypt: Fail\nERROR: The public key and encrypted document use different cryptosystems\n";
 		return -1;
 	}
+	return 0;
 }
