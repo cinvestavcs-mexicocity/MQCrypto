@@ -5,7 +5,7 @@
 #include <ctime>
 #include <iostream>
 #include <fstream>
-#include <pstream.h>
+#include <headers/pstream.h>
 
 #include <termios.h>
 #include <unistd.h>

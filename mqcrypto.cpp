@@ -1,10 +1,10 @@
-#include "aes.hh"
-#include "system.hh"
-#include "encoding.hh"
-#include "keypair.hh"
-#include "signature.hh"
-#include "encrypt.hh"
-#include "bz2.hh"
+#include <headers/aes.hh>
+#include <headers/system.hh>
+#include <headers/encoding.hh>
+#include <headers/keypair.hh>
+#include <headers/signature.hh>
+#include <headers/encrypt.hh>
+#include <headers/bz2.hh>
 
 #define LSH_RL_BUFSIZE 1024
 #define LSH_TOK_BUFSIZE 64
@@ -168,7 +168,7 @@ int generateKeypairExec(char **line, uint8_t argc)
   bool ascii = true;
   bool zip = false;
 
-  char *Keypairfilename = "";
+  char Keypairfilename[20];
   std::string asn1bin;
 
   unsigned char out256[32];
@@ -234,7 +234,7 @@ int generateKeypairExec(char **line, uint8_t argc)
       SetStdinEcho(true);
   }
 
-  Keypairfilename = generateKeypair(scheme);
+  generateKeypair(scheme, Keypairfilename);
 
   if(strcmp(Keypairfilename, "") == 0)
   {

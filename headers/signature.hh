@@ -894,17 +894,17 @@ int verify(const char *filename, const char *sign, const char *PKfilename)
 			unsigned char hashvalue[SHORTHASH_BYTES];
 			memcpy(hashvalue, &out[0], SHORTHASH_BYTES);
 			pflash_verification(hashvalue, SHORTHASH_BYTES, signature->signature.buf, SIGNATURE_BYTES, PK->key.buf, PK->key.size);
-		} else if(strcmp(version, "3icp") == 0)
+		} else if(strcmp((char *)signature->version.buf, "3icp") == 0)
 		{
 			unsigned char hashvalue[IC3_SHORTHASH_BYTES];
 			memcpy(hashvalue, &out[0], IC3_SHORTHASH_BYTES);
 			ic3_verification(hashvalue, IC3_SHORTHASH_BYTES, signature->signature.buf, IC3_SIGNATURE_BYTES, PK->key.buf, PK->key.size);
-		} else if(strcmp(version, "tts6440") == 0)
+		} else if(strcmp((char *)signature->version.buf, "tts6440") == 0)
 		{
 			unsigned char hashvalue[TTS6440_SHORTHASH_BYTES];
 			memcpy(hashvalue, &out[0], TTS6440_SHORTHASH_BYTES);
 			tts6440_verification(hashvalue, TTS6440_SHORTHASH_BYTES, signature->signature.buf, TTS6440_SIGNATURE_BYTES, PK->key.buf, PK->key.size);
-		} else if(strcmp(version, "sflashv1") == 0)
+		} else if(strcmp((char *)signature->version.buf, "sflashv1") == 0)
 		{
 			unsigned char hashvalue[33];
 			int conv[crypto_hash_sha512_BYTES];
@@ -936,7 +936,7 @@ int verify(const char *filename, const char *sign, const char *PKfilename)
  			std::string str;
         	std::getline(proc, str, '\0');
         	std::cout << str;
-		} else if(strcmp(version, "sflashv2") == 0)
+		} else if(strcmp((char *)signature->version.buf, "sflashv2") == 0)
 		{
 			unsigned char hashvalue[33];
 			int conv[crypto_hash_sha512_BYTES];
@@ -969,7 +969,7 @@ int verify(const char *filename, const char *sign, const char *PKfilename)
  			std::string str;
         	std::getline(proc, str, '\0');
         	std::cout << str;
-		} else if(strcmp(version, "uov") == 0)
+		} else if(strcmp((char *)signature->version.buf, "uov") == 0)
 		{
 			unsigned char hashvalue[20];
 			int conv[crypto_hash_sha512_BYTES];
@@ -1080,17 +1080,17 @@ int verify(const char *filename, const char *sign, MPKCPublicKey_t *PK)
 			unsigned char hashvalue[SHORTHASH_BYTES];
 			memcpy(hashvalue, &out[0], SHORTHASH_BYTES);
 			pflash_verification(hashvalue, SHORTHASH_BYTES, signature->signature.buf, SIGNATURE_BYTES, PK->key.buf, PK->key.size);
-		} else if(strcmp(version, "3icp") == 0)
+		} else if(strcmp((char *)signature->version.buf, "3icp") == 0)
 		{
 			unsigned char hashvalue[IC3_SHORTHASH_BYTES];
 			memcpy(hashvalue, &out[0], IC3_SHORTHASH_BYTES);
 			ic3_verification(hashvalue, IC3_SHORTHASH_BYTES, signature->signature.buf, IC3_SIGNATURE_BYTES, PK->key.buf, PK->key.size);
-		} else if(strcmp(version, "tts6440") == 0)
+		} else if(strcmp((char *)signature->version.buf, "tts6440") == 0)
 		{
 			unsigned char hashvalue[TTS6440_SHORTHASH_BYTES];
 			memcpy(hashvalue, &out[0], TTS6440_SHORTHASH_BYTES);
 			tts6440_verification(hashvalue, TTS6440_SHORTHASH_BYTES, signature->signature.buf, TTS6440_SIGNATURE_BYTES, PK->key.buf, PK->key.size);
-		} else if(strcmp(version, "sflashv1") == 0)
+		} else if(strcmp((char *)signature->version.buf, "sflashv1") == 0)
 		{
 			unsigned char hashvalue[33];
 			int conv[crypto_hash_sha512_BYTES];
@@ -1125,7 +1125,7 @@ int verify(const char *filename, const char *sign, MPKCPublicKey_t *PK)
  			std::string str;
         	std::getline(proc, str, '\0');
         	std::cout << str;
-		} else if(strcmp(version, "sflashv2") == 0)
+		} else if(strcmp((char *)signature->version.buf, "sflashv2") == 0)
 		{
 			unsigned char hashvalue[33];
 			int conv[crypto_hash_sha512_BYTES];
@@ -1160,7 +1160,7 @@ int verify(const char *filename, const char *sign, MPKCPublicKey_t *PK)
  			std::string str;
         	std::getline(proc, str, '\0');
         	std::cout << str;
-		} else if(strcmp(version, "uov") == 0)
+		} else if(strcmp((char *)signature->version.buf, "uov") == 0)
 		{
 			unsigned char hashvalue[20];
 			int conv[crypto_hash_sha512_BYTES];
