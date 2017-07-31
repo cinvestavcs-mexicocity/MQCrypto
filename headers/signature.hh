@@ -109,7 +109,7 @@ void firmaPFlash()
 	uint8_t pk[PUBLICKEY_BYTES];
 	uint8_t sk[SECRETKEY_BYTES];
 
-	uint64_t lc,lm = SHORTHASH_BYTES,lpk,lsk;
+	unsigned long long lc,lm = SHORTHASH_BYTES,lpk,lsk;
 
 	pflash_keypair( sk , &lsk , pk , &lpk );
 
@@ -138,11 +138,11 @@ int sign(const char *filename, const char *SKfilename, char *digest)
 
   	char *version;
   	uint8_t *sk;
-	uint64_t sklen;
+	unsigned long long sklen;
 	unsigned char out[crypto_hash_sha512_BYTES];
 
 	uint8 s[64];
-	uint64_t ls;
+	unsigned long long ls;
 	std::string s_aux = "";
 
   	signature = (MPKCSignature_t *)calloc(1, sizeof(MPKCSignature_t));
@@ -371,11 +371,11 @@ int sign(const char *filename, const char *SKfilename, char *digest, const char 
 
   	char *version;
   	uint8_t *sk;
-	uint64_t sklen;
+	unsigned long long sklen;
 	unsigned char out[crypto_hash_sha512_BYTES];
 
 	uint8 s[64]; //s[43]
-	uint64_t ls;
+	unsigned long long ls;
 	std::string s_aux = "";
 
   	signature = (MPKCSignature_t *)calloc(1, sizeof(MPKCSignature_t));
@@ -604,11 +604,11 @@ int sign(const char *filename, MPKCPrivateKey_t *SK, char *digest, const char *o
 
   	char *version;
   	uint8_t *sk;
-	uint64_t sklen;
+	unsigned long long sklen;
 	unsigned char out[crypto_hash_sha512_BYTES];
 
 	uint8 s[64]; //s[43]
-	uint64_t ls;
+	unsigned long long ls;
 	std::string s_aux = "";
 
   	signature = (MPKCSignature_t *)calloc(1, sizeof(MPKCSignature_t));

@@ -177,7 +177,7 @@ int generateKeypairExec(char **line, uint8_t argc)
   // secure_string content = "";
   // secure_string cipher_text = "";
   // secure_string plain_text = "";
-  uint64_t len;
+  unsigned long long len;
 
   for(uint8_t i = 0; i < argc; i++)
   {
@@ -330,7 +330,7 @@ int keysExec(char **command, uint8_t argc)
 
   char line[256];
   std::string content = "";
-  uint64_t len;
+  unsigned long long len;
   std::string cipher_text = "";
 
   std::string b64content = "";
@@ -529,7 +529,7 @@ int signExec(char **command, uint8_t argc)
   unsigned char out128[32];
 
   std::string content = "";
-  uint64_t len;
+  unsigned long long len;
 
   for(uint8_t i = 1; i < argc; i++)
   {
@@ -699,7 +699,7 @@ int verifyExec(char **command, uint8_t argc)
   unsigned char out128[32];
 
   std::string content = "";
-  uint64_t len;
+  unsigned long long len;
 
   for(uint8_t i = 1; i < argc; i++)
   {

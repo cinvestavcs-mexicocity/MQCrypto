@@ -5,10 +5,10 @@ int encrypt(char *filename, char *PKfilename, char *output)
 
   	char *version;
   	uint8_t *pk;
-	uint64_t pklen;
+	unsigned long long pklen;
 
 	uint8_t *cm;
-	uint64_t lcm;
+	unsigned long long lcm;
 
   	cipher = (MPKCMessage_t *)calloc(1, sizeof(MPKCMessage_t));
   	if(!cipher) {
@@ -87,10 +87,10 @@ int decrypt(const char *filename, const char *SKfilename)
 
   	char *version;
   	uint8_t *sk;
-	uint64_t sklen;
+	unsigned long long sklen;
 
 	uint8_t *cm;
-	uint64_t lcm;
+	unsigned long long lcm;
 
   	cipher = (MPKCMessage_t *)calloc(1, sizeof(MPKCMessage_t));
   	if(!cipher) {
@@ -146,10 +146,10 @@ int decrypt(const char *filename, const char *SKfilename, const char *output)
 
   	char *version;
   	uint8_t *sk;
-	uint64_t sklen;
+	unsigned long long sklen;
 
 	uint8_t *cm;
-	uint64_t lcm;
+	unsigned long long lcm;
 
   	cipher = (MPKCMessage_t *)calloc(1, sizeof(MPKCMessage_t));
   	if(!cipher) {
