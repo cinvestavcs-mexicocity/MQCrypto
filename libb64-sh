@@ -1,0 +1,5 @@
+#!/bin/sh
+
+cd src/b64
+make clean && make
+cd ../..
