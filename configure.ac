@@ -13,7 +13,7 @@ AC_PROG_CC
 
 # Checks for libraries.
 # FIXME: Replace `main' with a function in `-lbz2':
-AC_CHECK_LIB([bz2], [BZ2_bzWriteOpen])
+AC_CHECK_LIB([bz2], [BZ2_bzWriteOpen], [], AC_MSG_ERROR([Failed to find libbz2-dev.]))
 PKG_CHECK_MODULES([openssl], openssl, [], AC_MSG_ERROR([Failed to find libssl-dev.]))
 PKG_CHECK_MODULES([libsodium], libsodium, [], AC_MSG_ERROR([Failed to find libsodium.]))
 
