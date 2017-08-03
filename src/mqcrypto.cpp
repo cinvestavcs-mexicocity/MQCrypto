@@ -313,7 +313,9 @@ int generateKeypairExec(char **line, uint8_t argc)
     std::cout<<"Keypair saved in file "<<output<<".bzip2\n";
   }
   else {
-    rename(b64Key, output);
+    std::string move = "mv " + (std::string)b64Key + " " + (std::string)output;
+    // rename(b64Key, output);
+    system((char *)move.c_str());
     std::cout<<"Keypair saved in file "<<output<<"\n";
   }
 
@@ -338,6 +340,7 @@ int keysExec(char **command, uint8_t argc)
   std::string cipher_text = "";
 
   std::string b64content = "";
+  std::string move = "";
 
   unsigned char out256[32];
   unsigned char out128[32];
@@ -488,7 +491,9 @@ int keysExec(char **command, uint8_t argc)
     remove(pubb64tmp);
     if(zip)
     {
-      rename(outputPublic, pubtmp);
+      move = "mv " + (std::string)pubtmp + " " + (std::string)outputPublic;
+      // rename(outputPublic, pubtmp);
+      system((char *)move.c_str());
       bz2_compress(pubtmp, outputPublic);
       remove(pubtmp);
       std::cout<<"Public key saved in "<<outputPublic<<".bzip2\n";
@@ -532,11 +537,13 @@ int keysExec(char **command, uint8_t argc)
       std::string header = "-----BEGIN MPKC PRIVATE KEY-----\n" + (std::string)&line[0] + "\n";
       keyHeader(outputPrivate, (char *)header.c_str(), "-----END MPKC PRIVATE KEY-----", b64content, len);
     }
-    // remove(privtmp);
+    remove(privtmp);
     remove(privb64tmp);
     if(zip)
     {
-      rename(outputPrivate, privtmp);
+      move = "mv " + (std::string)privtmp + " " + (std::string)outputPrivate;
+      // rename(outputPrivate, privtmp);
+      system((char *)move.c_str());
       bz2_compress(privtmp, outputPrivate);
       remove(privtmp);
       std::cout<<"Private key saved in "<<outputPrivate<<".bzip2\n";
@@ -561,6 +568,7 @@ int signExec(char **command, uint8_t argc)
   bool encrypted = true;
 
   std::string inputKeypair = command[0];
+  std::string move = "";
   char line[256];
   char *keytype;
   
@@ -743,7 +751,9 @@ int signExec(char **command, uint8_t argc)
   {
     char asn1tmp[] = "/var/tmp/asn1_XXXXXX";
     mkstemp(asn1tmp);
-    rename(signedFile, asn1tmp);
+    move = "mv " + (std::string)signedFile + " " + (std::string)asn1tmp;
+    // rename(signedFile, asn1tmp);
+    system((char *)move.c_str());
     bz2_compress(asn1tmp, signedFile);
     remove(asn1tmp);
     std::cout<<"Signature saved in: "<<signedFile<<".bz2\n";

@@ -11,6 +11,7 @@ int sign(const char *filename, const char *SKfilename, char *digest)
 	uint8 s[64];
 	unsigned long long ls;
 	std::string s_aux = "";
+	std::string move = "";
 
   	signature = (MPKCSignature_t *)calloc(1, sizeof(MPKCSignature_t));
   	if(!signature) {
@@ -81,7 +82,9 @@ int sign(const char *filename, const char *SKfilename, char *digest)
 		mkstemp((char *)sgntmp.c_str());
 		std::string privtmp = "/var/tmp/priv_XXXXXX";
 		mkstemp((char *)sgntmp.c_str());
-		rename((char *)privtmp.c_str(), (char *)(privtmp + ".priv").c_str());
+		move = "mv " + privtmp + " " + privtmp + ".priv";
+		system((char *)move.c_str());
+		// rename((char *)privtmp.c_str(), (char *)(privtmp + ".priv").c_str());
 
 		char converted[33 * 2 + 1];
 		for(int i = 0; i < 64; i++)
@@ -99,6 +102,10 @@ int sign(const char *filename, const char *SKfilename, char *digest)
 
         readBinaryFile((char *)sgntmp.c_str(), &s_aux, &ls);
         strcpy((char *)s, (char *)s_aux.c_str());
+        
+        remove((char *)(privtmp + ".priv").c_str());
+        remove((char *)(sgntmp + ".sgn").c_str());
+        remove((char *)sgntmp.c_str());
 	} else if(strcmp(version, "sflashv2") == 0)
 	{
 		unsigned char hashvalue[264];
@@ -115,7 +122,9 @@ int sign(const char *filename, const char *SKfilename, char *digest)
 		mkstemp((char *)sgntmp.c_str());
 		std::string privtmp = "/var/tmp/priv_XXXXXX";
 		mkstemp((char *)sgntmp.c_str());
-		rename((char *)privtmp.c_str(), (char *)(privtmp + ".priv").c_str());
+		move = "mv " + privtmp + " " + privtmp + ".priv";
+		system((char *)move.c_str());
+		// rename((char *)privtmp.c_str(), (char *)(privtmp + ".priv").c_str());
 
 		char converted[33 * 2 + 1];
 		for(int i = 0; i < 64; i++)
@@ -133,6 +142,10 @@ int sign(const char *filename, const char *SKfilename, char *digest)
 
         readBinaryFile((char *)sgntmp.c_str(), &s_aux, &ls);
         strcpy((char *)s,(char *)s_aux.c_str());
+        
+        remove((char *)(privtmp + ".priv").c_str());
+        remove((char *)(sgntmp + ".sgn").c_str());
+        remove((char *)sgntmp.c_str());
 	} else if(strcmp(version, "uov") == 0)
 	{
 		unsigned char hashvalue[264];
@@ -149,7 +162,9 @@ int sign(const char *filename, const char *SKfilename, char *digest)
 		mkstemp((char *)sgntmp.c_str());
 		std::string privtmp = "/var/tmp/priv_XXXXXX";
 		mkstemp((char *)sgntmp.c_str());
-		rename((char *)privtmp.c_str(), (char *)(privtmp + ".priv").c_str());
+		move = "mv " + privtmp + " " + privtmp + ".priv";
+		system((char *)move.c_str());
+		// rename((char *)privtmp.c_str(), (char *)(privtmp + ".priv").c_str());
 
 		char converted[33 * 2 + 1];
 		for(int i = 0; i < 64; i++)
@@ -167,6 +182,10 @@ int sign(const char *filename, const char *SKfilename, char *digest)
 
         readBinaryFile((char *)sgntmp.c_str(), &s_aux, &ls);
         strcpy((char *)s, (char *)s_aux.c_str());
+        
+        remove((char *)(privtmp + ".priv").c_str());
+        remove((char *)(sgntmp + ".sgn").c_str());
+        remove((char *)sgntmp.c_str());
 	} else if(strcmp(version, "pflash") == 0)
 	{
 		unsigned char hashvalue[SHORTHASH_BYTES];
@@ -244,6 +263,7 @@ int sign(const char *filename, const char *SKfilename, char *digest, const char 
 	uint8 s[64]; //s[43]
 	unsigned long long ls;
 	std::string s_aux = "";
+	std::string move = "";
 
   	signature = (MPKCSignature_t *)calloc(1, sizeof(MPKCSignature_t));
   	if(!signature) {
@@ -330,7 +350,9 @@ int sign(const char *filename, const char *SKfilename, char *digest, const char 
 		mkstemp((char *)sgntmp.c_str());
 		std::string privtmp = "/var/tmp/priv_XXXXXX";
 		mkstemp((char *)privtmp.c_str());
-		rename((char *)privtmp.c_str(), (char *)(privtmp + ".priv").c_str());
+		move = "mv " + privtmp + " " + privtmp + ".priv";
+		system((char *)move.c_str());
+		// rename((char *)privtmp.c_str(), (char *)(privtmp + ".priv").c_str());
 		writeEncryptedFile(sk, (char *)(privtmp + ".priv").c_str(), sklen);
 
 		char converted[33 * 2 + 1];
@@ -349,6 +371,10 @@ int sign(const char *filename, const char *SKfilename, char *digest, const char 
 
         readBinaryFile((char *)(sgntmp + ".sgn").c_str(), &s_aux, &ls);
         strcpy((char *)s, (char *)s_aux.c_str());
+        
+        remove((char *)(privtmp + ".priv").c_str());
+        remove((char *)(sgntmp + ".sgn").c_str());
+        remove((char *)sgntmp.c_str());
 	} else if(strcmp(version, "sflashv2") == 0)
 	{
 		unsigned char hashvalue[33];
@@ -365,7 +391,9 @@ int sign(const char *filename, const char *SKfilename, char *digest, const char 
 		mkstemp((char *)sgntmp.c_str());
 		std::string privtmp = "/var/tmp/priv_XXXXXX";
 		mkstemp((char *)privtmp.c_str());
-		rename((char *)privtmp.c_str(), (char *)(privtmp + ".priv").c_str());
+		move = "mv " + privtmp + " " + privtmp + ".priv";
+		system((char *)move.c_str());
+		// rename((char *)privtmp.c_str(), (char *)(privtmp + ".priv").c_str());
 		writeEncryptedFile(sk, (char *)(privtmp + ".priv").c_str(), sklen);
 		
 		char converted[33 * 2 + 1];
@@ -382,6 +410,10 @@ int sign(const char *filename, const char *SKfilename, char *digest, const char 
    //      std::cout << str;
 		readBinaryFile((char *)(sgntmp + ".sgn").c_str(), &s_aux, &ls);
         strcpy((char *)s,(char *)s_aux.c_str());
+        
+        remove((char *)(privtmp + ".priv").c_str());
+        remove((char *)(sgntmp + ".sgn").c_str());
+        remove((char *)sgntmp.c_str());
 	} else if(strcmp(version, "uov") == 0)
 	{
 		unsigned char hashvalue[20];
@@ -392,7 +424,9 @@ int sign(const char *filename, const char *SKfilename, char *digest, const char 
 		mkstemp((char *)sgntmp.c_str());
 		std::string privtmp = "/var/tmp/priv_XXXXXX";
 		mkstemp((char *)privtmp.c_str());
-		rename((char *)privtmp.c_str(), (char *)(privtmp + ".priv").c_str());
+		move = "mv " + privtmp + " " + privtmp + ".priv";
+		system((char *)move.c_str());
+		// rename((char *)privtmp.c_str(), (char *)(privtmp + ".priv").c_str());
 		writeEncryptedFile(sk, (char *)(privtmp + ".priv").c_str(), sklen);
 
 		char converted[33 * 2 + 1];
@@ -411,6 +445,10 @@ int sign(const char *filename, const char *SKfilename, char *digest, const char 
 
         readBinaryFile((char *)(sgntmp + ".sgn").c_str(), &s_aux, &ls);
         strcpy((char *)s, (char *)s_aux.c_str());
+        
+        remove((char *)(privtmp + ".priv").c_str());
+        remove((char *)(sgntmp + ".sgn").c_str());
+        remove((char *)sgntmp.c_str());
 	} else
 	{
 		printf("This system has support for generating key pair of the following MPKC schemes\n-rainbow5640\n-rainbow6440\n-rainbow16242020\n-rainbow256181212\n-pflash\n");
@@ -477,6 +515,7 @@ int sign(const char *filename, MPKCPrivateKey_t *SK, char *digest, const char *o
 	uint8 s[64]; //s[43]
 	unsigned long long ls;
 	std::string s_aux = "";
+	std::string move = "";
 
   	signature = (MPKCSignature_t *)calloc(1, sizeof(MPKCSignature_t));
   	if(!signature) {
@@ -556,7 +595,9 @@ int sign(const char *filename, MPKCPrivateKey_t *SK, char *digest, const char *o
 		mkstemp((char *)sgntmp.c_str());
 		std::string privtmp = "/var/tmp/priv_XXXXXX";
 		mkstemp((char *)privtmp.c_str());
-		rename((char *)privtmp.c_str(), (char *)(privtmp + ".priv").c_str());
+		move = "mv " + privtmp + " " + privtmp + ".priv";
+		system((char *)move.c_str());
+		// rename((char *)privtmp.c_str(), (char *)(privtmp + ".priv").c_str());
 		writeEncryptedFile(sk, (char *)(privtmp + ".priv").c_str(), sklen);
 
 		char converted[33 * 2 + 1];
@@ -575,6 +616,10 @@ int sign(const char *filename, MPKCPrivateKey_t *SK, char *digest, const char *o
 
         readBinaryFile((char *)(sgntmp + ".sgn").c_str(), &s_aux, &ls);
         strcpy((char *)s, (char *)s_aux.c_str());
+        
+        remove((char *)(privtmp + ".priv").c_str());
+        remove((char *)(sgntmp + ".sgn").c_str());
+        remove((char *)sgntmp.c_str());
 	} else if(strcmp(version, "sflashv2") == 0)
 	{
 		unsigned char hashvalue[33];
@@ -591,7 +636,9 @@ int sign(const char *filename, MPKCPrivateKey_t *SK, char *digest, const char *o
 		mkstemp((char *)sgntmp.c_str());
 		std::string privtmp = "/var/tmp/priv_XXXXXX";
 		mkstemp((char *)privtmp.c_str());
-		rename((char *)privtmp.c_str(), (char *)(privtmp + ".priv").c_str());
+		move = "mv " + privtmp + " " + privtmp + ".priv";
+		system((char *)move.c_str());
+		// rename((char *)privtmp.c_str(), (char *)(privtmp + ".priv").c_str());
 		writeEncryptedFile(sk, (char *)(privtmp + ".priv").c_str(), sklen);
 		
 		char converted[33 * 2 + 1];
@@ -609,6 +656,10 @@ int sign(const char *filename, MPKCPrivateKey_t *SK, char *digest, const char *o
 
 		readBinaryFile((char *)(sgntmp + ".sgn").c_str(), &s_aux, &ls);
         strcpy((char *)s,(char *)s_aux.c_str());
+        
+        remove((char *)(privtmp + ".priv").c_str());
+        remove((char *)(sgntmp + ".sgn").c_str());
+        remove((char *)sgntmp.c_str());
 	} else if(strcmp(version, "uov") == 0)
 	{
 		unsigned char hashvalue[20];
@@ -619,7 +670,9 @@ int sign(const char *filename, MPKCPrivateKey_t *SK, char *digest, const char *o
 		mkstemp((char *)sgntmp.c_str());
 		std::string privtmp = "/var/tmp/priv_XXXXXX";
 		mkstemp((char *)privtmp.c_str());
-		rename((char *)privtmp.c_str(), (char *)(privtmp + ".priv").c_str());
+		move = "mv " + privtmp + " " + privtmp + ".priv";
+		system((char *)move.c_str());
+		// rename((char *)privtmp.c_str(), (char *)(privtmp + ".priv").c_str());
 		writeEncryptedFile(sk, (char *)(privtmp + ".priv").c_str(), sklen);
 
 		char converted[33 * 2 + 1];
@@ -638,6 +691,10 @@ int sign(const char *filename, MPKCPrivateKey_t *SK, char *digest, const char *o
 
         readBinaryFile((char *)(sgntmp + ".sgn").c_str(), &s_aux, &ls);
         strcpy((char *)s, (char *)s_aux.c_str());
+        
+        remove((char *)(privtmp + ".priv").c_str());
+        remove((char *)(sgntmp + ".sgn").c_str());
+        remove((char *)sgntmp.c_str());
 	} else
 	{
 		printf("This system has support for generating key pair of the following MPKC schemes\n-rainbow5640\n-rainbow6440\n-rainbow16242020\n-rainbow256181212\n-pflash\n");
@@ -682,7 +739,7 @@ int sign(const char *filename, MPKCPrivateKey_t *SK, char *digest, const char *o
     free(signature);
     free(SK);
 
-    // remove(Sigfilename);
+    remove(Sigfilename);
 
     return 0;
 }
@@ -820,7 +877,7 @@ int verify(const char *filename, const char *sign, const char *PKfilename)
 			writeEncryptedFile(signature->signature.buf, (char *)sgntmp.c_str(), signature->signature.size);
 			std::string pubtmp = "/var/tmp/pub_XXXXXX.pub";
 			mkstemp((char *)pubtmp.c_str());
-			rename((char *)pubtmp.c_str(), (char *)(pubtmp + ".pub").c_str());
+			// rename((char *)pubtmp.c_str(), (char *)(pubtmp + ".pub").c_str());
 			writeEncryptedFile(PK->key.buf, (char *)pubtmp.c_str(), PK->key.size);
 
 			char converted[33 * 2 + 1];
@@ -894,6 +951,8 @@ int verify(const char *filename, const char *sign, MPKCPublicKey_t *PK)
 
 	std::string content = "";
 	unsigned long long len;
+
+	std::string move = "";
 
 	readFile(sign, &content, &len);
 
@@ -972,12 +1031,16 @@ int verify(const char *filename, const char *sign, MPKCPublicKey_t *PK)
 			std::string sgntmp = "/var/tmp/sgn_XXXXXX";
 			mkstemp((char *)sgntmp.c_str());
 			writeEncryptedFile(signature->signature.buf, (char *)sgntmp.c_str(), signature->signature.size);
-			rename((char *)sgntmp.c_str(), (char *)(sgntmp + ".sgn").c_str());
+			move = "mv " + sgntmp + " " + sgntmp + ".sgn";
+			system((char *)move.c_str());
+			// rename((char *)sgntmp.c_str(), (char *)(sgntmp + ".sgn").c_str());
 
 			std::string pubtmp = "/var/tmp/pub_XXXXXX";
 			mkstemp((char *)pubtmp.c_str());
 			writeEncryptedFile(PK->key.buf, (char *)pubtmp.c_str(), PK->key.size);
-			rename((char *)pubtmp.c_str(), (char *)(pubtmp + ".pub").c_str());
+			move = "mv " + pubtmp + " " + pubtmp + ".pub";
+			system((char *)move.c_str());
+			// rename((char *)pubtmp.c_str(), (char *)(pubtmp + ".pub").c_str());
 			
 	
 			char converted[33 * 2 + 1];
@@ -992,6 +1055,9 @@ int verify(const char *filename, const char *sign, MPKCPublicKey_t *PK)
  			std::string str;
         	std::getline(proc, str, '\0');
         	std::cout << str;
+
+        	remove((char *)(pubtmp + ".pub").c_str());
+        	remove((char *)(sgntmp + ".sgn").c_str());
 		} else if(strcmp((char *)signature->version.buf, "sflashv2") == 0)
 		{
 			unsigned char hashvalue[33];
@@ -1007,12 +1073,16 @@ int verify(const char *filename, const char *sign, MPKCPublicKey_t *PK)
 			std::string sgntmp = "/var/tmp/sgn_XXXXXX";
 			mkstemp((char *)sgntmp.c_str());
 			writeEncryptedFile(signature->signature.buf, (char *)sgntmp.c_str(), signature->signature.size);
-			rename((char *)sgntmp.c_str(), (char *)(sgntmp + ".sgn").c_str());
+			move = "mv " + sgntmp + " " + sgntmp + ".sgn";
+			system((char *)move.c_str());
+			// rename((char *)sgntmp.c_str(), (char *)(sgntmp + ".sgn").c_str());
 
 			std::string pubtmp = "/var/tmp/pub_XXXXXX";
 			mkstemp((char *)pubtmp.c_str());
 			writeEncryptedFile(PK->key.buf, (char *)pubtmp.c_str(), PK->key.size);
-			rename((char *)pubtmp.c_str(), (char *)(pubtmp + ".pub").c_str());
+			move = "mv " + pubtmp + " " + pubtmp + ".pub";
+			system((char *)move.c_str());
+			// rename((char *)pubtmp.c_str(), (char *)(pubtmp + ".pub").c_str());
 
 			char converted[33 * 2 + 1];
 			for(int i = 0; i < 64; i++)
@@ -1027,6 +1097,9 @@ int verify(const char *filename, const char *sign, MPKCPublicKey_t *PK)
  			std::string str;
         	std::getline(proc, str, '\0');
         	std::cout << str;
+
+        	remove((char *)(pubtmp + ".pub").c_str());
+        	remove((char *)(sgntmp + ".sgn").c_str());
 		} else if(strcmp((char *)signature->version.buf, "uov") == 0)
 		{
 			unsigned char hashvalue[20];
@@ -1036,12 +1109,16 @@ int verify(const char *filename, const char *sign, MPKCPublicKey_t *PK)
 			std::string sgntmp = "/var/tmp/sgn_XXXXXX";
 			mkstemp((char *)sgntmp.c_str());
 			writeEncryptedFile(signature->signature.buf, (char *)sgntmp.c_str(), signature->signature.size);
-			rename((char *)sgntmp.c_str(), (char *)(sgntmp + ".sgn").c_str());
+			move = "mv " + sgntmp + " " + sgntmp + ".sgn";
+			system((char *)move.c_str());
+			// rename((char *)sgntmp.c_str(), (char *)(sgntmp + ".sgn").c_str());
 
 			std::string pubtmp = "/var/tmp/pub_XXXXXX";
 			mkstemp((char *)pubtmp.c_str());
 			writeEncryptedFile(PK->key.buf, (char *)pubtmp.c_str(), PK->key.size);
-			rename((char *)pubtmp.c_str(), (char *)(pubtmp + ".pub").c_str());
+			move = "mv " + pubtmp + " " + pubtmp + ".pub";
+			system((char *)move.c_str());
+			// rename((char *)pubtmp.c_str(), (char *)(pubtmp + ".pub").c_str());
 
 			char converted[33 * 2 + 1];
 			for(int i = 0; i < 64; i++)
@@ -1056,6 +1133,9 @@ int verify(const char *filename, const char *sign, MPKCPublicKey_t *PK)
  			std::string str;
         	std::getline(proc, str, '\0');
         	std::cout << str;
+
+        	remove((char *)(pubtmp + ".pub").c_str());
+        	remove((char *)(sgntmp + ".sgn").c_str());
 		} else
 		{
 			printf("This system has support for generating key pair of the following MPKC schemes\n-rainbow5640\n-rainbow6440\n-rainbow16242020\n-rainbow256181212\n-pflash\n");

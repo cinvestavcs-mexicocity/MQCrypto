@@ -303,6 +303,9 @@ void generateKeypair(char cryptosystem[], char Keypairfilename[]) {
         } else {
         	std::cout<<"ERROR: Key generation failed.\n";
         }
+        remove((char *)keytmp.c_str());
+        remove((char *)(keytmp + ".pub").c_str());
+        remove((char *)(keytmp + ".priv").c_str());
 	} else if(strcmp(cryptosystem, "sflashv2") == 0)
 	{
 		// unsigned char pk[100000];
@@ -330,7 +333,9 @@ void generateKeypair(char cryptosystem[], char Keypairfilename[]) {
         } else {
         	std::cout<<"ERROR: Key generation failed.\n";
         }
-
+        remove((char *)keytmp.c_str());
+        remove((char *)(keytmp + ".pub").c_str());
+        remove((char *)(keytmp + ".priv").c_str());
 	} else if(strcmp(cryptosystem, "uov") == 0)
 	{
 		std::string pk = "";
@@ -356,7 +361,9 @@ void generateKeypair(char cryptosystem[], char Keypairfilename[]) {
         } else {
         	std::cout<<"ERROR: Key generation failed.\n";
         }
-
+        remove((char *)keytmp.c_str());
+        remove((char *)(keytmp + ".pub").c_str());
+        remove((char *)(keytmp + ".priv").c_str());
 	} else
 	{
 		printf("This system has support for generating key pair of the following MPKC schemes\n-rainbow5640\n-rainbow6440\n-rainbow16242020\n-rainbow256181212\n-pflash\n-sflashv1\n-sflashv2\n-3icp\n-tts6440\n-uov");
