@@ -1102,7 +1102,7 @@ void generateKeypairHelp(void)
   printf("\t\t\t\trainbow16242020\n");
   printf("\t\t\t\trainbow256181212\n");
   printf("\t\t\t\tpflash\n");
-  printf("\t\t\t\tsflash\n");
+  printf("\t\t\t\tsflashv1\n");
   printf("\t\t\t\tsflashv2\n");
   printf("\t\t\t\tuov\n");
   printf("\t\t\t\t3icp\n");
