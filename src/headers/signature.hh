@@ -32,7 +32,7 @@ int sign(const char *filename, const char *SKfilename, char *digest)
 		crypto_hash_sha512(out, (const unsigned char *)content.c_str(), len);
 	} else
 	{
-		printf("The following are valid hash functions to be used by this implementation\n-sha256\n-sha512\n");
+		printf("The following are valid hash functions that can be used by MQCrypto\n-sha256\n-sha512\n");
 		return -1;
 	}
 
@@ -68,6 +68,11 @@ int sign(const char *filename, const char *SKfilename, char *digest)
 		rainbow256181212_signature((unsigned char *)s, &ls, hashvalue, RAINBOW256181212_HASH_BYTES, sk, sklen);
 	} else if(strcmp(version, "sflashv1") == 0)
 	{
+		if(!SageMath)
+		{
+    		printf("MQCrypto: sage: command not found\n");
+    		return 1;
+		}
 		unsigned char hashvalue[264];
 		int conv[crypto_hash_sha512_BYTES];
 		if(strcmp(digest, "sha256") == 0)
@@ -108,6 +113,11 @@ int sign(const char *filename, const char *SKfilename, char *digest)
         remove((char *)sgntmp.c_str());
 	} else if(strcmp(version, "sflashv2") == 0)
 	{
+		if(!SageMath)
+		{
+    		printf("MQCrypto: sage: command not found\n");
+    		return 1;
+		}
 		unsigned char hashvalue[264];
 		int conv[crypto_hash_sha512_BYTES];
 		if(strcmp(digest, "sha256") == 0)
@@ -148,6 +158,11 @@ int sign(const char *filename, const char *SKfilename, char *digest)
         remove((char *)sgntmp.c_str());
 	} else if(strcmp(version, "uov") == 0)
 	{
+		if(!SageMath)
+		{
+    		printf("MQCrypto: sage: command not found\n");
+    		return 1;
+		}
 		unsigned char hashvalue[264];
 		int conv[crypto_hash_sha512_BYTES];
 		if(strcmp(digest, "sha256") == 0)
@@ -284,7 +299,7 @@ int sign(const char *filename, const char *SKfilename, char *digest, const char 
 		crypto_hash_sha512(out, (const unsigned char *)content.c_str(), len);
 	} else
 	{
-		printf("The following are valid hash functions to be used by this implementation\n-sha256\n-sha512\n");
+		printf("The following are valid hash functions that can be used by MQCrypto\n-sha256\n-sha512\n");
 		return -1;
 	}
 	
@@ -336,6 +351,11 @@ int sign(const char *filename, const char *SKfilename, char *digest, const char 
 		tts6440_signature((unsigned char *)s, &ls, hashvalue, TTS6440_SHORTHASH_BYTES, sk, sklen);
 	} else if(strcmp(version, "sflashv1") == 0)
 	{
+		if(!SageMath)
+		{
+    		printf("MQCrypto: sage: command not found\n");
+    		return 1;
+		}
 		unsigned char hashvalue[33];
 		int conv[crypto_hash_sha512_BYTES];
 		if(strcmp(digest, "sha256") == 0)
@@ -377,6 +397,11 @@ int sign(const char *filename, const char *SKfilename, char *digest, const char 
         remove((char *)sgntmp.c_str());
 	} else if(strcmp(version, "sflashv2") == 0)
 	{
+		if(!SageMath)
+		{
+    		printf("MQCrypto: sage: command not found\n");
+    		return 1;
+		}
 		unsigned char hashvalue[33];
 		int conv[crypto_hash_sha512_BYTES];
 		if(strcmp(digest, "sha256") == 0)
@@ -416,6 +441,11 @@ int sign(const char *filename, const char *SKfilename, char *digest, const char 
         remove((char *)sgntmp.c_str());
 	} else if(strcmp(version, "uov") == 0)
 	{
+		if(!SageMath)
+		{
+    		printf("MQCrypto: sage: command not found\n");
+    		return 1;
+		}
 		unsigned char hashvalue[20];
 		int conv[crypto_hash_sha512_BYTES];
 		memcpy(hashvalue, &out[0], 20);
@@ -536,7 +566,7 @@ int sign(const char *filename, MPKCPrivateKey_t *SK, char *digest, const char *o
 		crypto_hash_sha512(out, (const unsigned char *)content.c_str(), len);
 	} else
 	{
-		printf("The following are valid hash functions to be used by this implementation\n-sha256\n-sha512\n");
+		printf("The following are valid hash functions that can be used by MQCrypto\n-sha256\n-sha512\n");
 		return -1;
 	}
 
@@ -581,6 +611,11 @@ int sign(const char *filename, MPKCPrivateKey_t *SK, char *digest, const char *o
 		tts6440_signature((unsigned char *)s, &ls, hashvalue, TTS6440_SHORTHASH_BYTES, sk, sklen);
 	} else if(strcmp(version, "sflashv1") == 0)
 	{
+		if(!SageMath)
+		{
+    		printf("MQCrypto: sage: command not found\n");
+    		return 1;
+		}
 		unsigned char hashvalue[33];
 		int conv[crypto_hash_sha512_BYTES];
 		if(strcmp(digest, "sha256") == 0)
@@ -622,6 +657,11 @@ int sign(const char *filename, MPKCPrivateKey_t *SK, char *digest, const char *o
         remove((char *)sgntmp.c_str());
 	} else if(strcmp(version, "sflashv2") == 0)
 	{
+		if(!SageMath)
+		{
+    		printf("MQCrypto: sage: command not found\n");
+    		return 1;
+		}
 		unsigned char hashvalue[33];
 		int conv[crypto_hash_sha512_BYTES];
 		if(strcmp(digest, "sha256") == 0)
@@ -662,6 +702,11 @@ int sign(const char *filename, MPKCPrivateKey_t *SK, char *digest, const char *o
         remove((char *)sgntmp.c_str());
 	} else if(strcmp(version, "uov") == 0)
 	{
+		if(!SageMath)
+		{
+    		printf("MQCrypto: sage: command not found\n");
+    		return 1;
+		}
 		unsigned char hashvalue[20];
 		int conv[crypto_hash_sha512_BYTES];
 		memcpy(hashvalue, &out[0], 20);
@@ -830,6 +875,11 @@ int verify(const char *filename, const char *sign, const char *PKfilename)
 			tts6440_verification(hashvalue, TTS6440_SHORTHASH_BYTES, signature->signature.buf, TTS6440_SIGNATURE_BYTES, PK->key.buf, PK->key.size);
 		} else if(strcmp((char *)signature->version.buf, "sflashv1") == 0)
 		{
+			if(!SageMath)
+			{
+    			printf("MQCrypto: sage: command not found\n");
+    			return 1;
+			}
 			unsigned char hashvalue[33];
 			int conv[crypto_hash_sha512_BYTES];
 			if(strcmp((char *)signature->digest.buf, "sha256") == 0)
@@ -862,6 +912,11 @@ int verify(const char *filename, const char *sign, const char *PKfilename)
         	std::cout << str;
 		} else if(strcmp((char *)signature->version.buf, "sflashv2") == 0)
 		{
+			if(!SageMath)
+			{
+    			printf("MQCrypto: sage: command not found\n");
+    			return 1;
+			}
 			unsigned char hashvalue[33];
 			int conv[crypto_hash_sha512_BYTES];
 			if(strcmp((char *)signature->digest.buf, "sha256") == 0)
@@ -895,6 +950,11 @@ int verify(const char *filename, const char *sign, const char *PKfilename)
         	std::cout << str;
 		} else if(strcmp((char *)signature->version.buf, "uov") == 0)
 		{
+			if(!SageMath)
+			{
+    			printf("MQCrypto: sage: command not found\n");
+    			return 1;
+			}
 			unsigned char hashvalue[20];
 			int conv[crypto_hash_sha512_BYTES];
 			memcpy(hashvalue, &out[0], 20);
@@ -1018,6 +1078,11 @@ int verify(const char *filename, const char *sign, MPKCPublicKey_t *PK)
 			tts6440_verification(hashvalue, TTS6440_SHORTHASH_BYTES, signature->signature.buf, TTS6440_SIGNATURE_BYTES, PK->key.buf, PK->key.size);
 		} else if(strcmp((char *)signature->version.buf, "sflashv1") == 0)
 		{
+			if(!SageMath)
+			{
+    			printf("MQCrypto: sage: command not found\n");
+    			return 1;
+			}
 			unsigned char hashvalue[33];
 			int conv[crypto_hash_sha512_BYTES];
 			if(strcmp((char *)signature->digest.buf, "sha256") == 0)
@@ -1060,6 +1125,11 @@ int verify(const char *filename, const char *sign, MPKCPublicKey_t *PK)
         	remove((char *)(sgntmp + ".sgn").c_str());
 		} else if(strcmp((char *)signature->version.buf, "sflashv2") == 0)
 		{
+			if(!SageMath)
+			{
+    			printf("MQCrypto: sage: command not found\n");
+    			return 1;
+			}
 			unsigned char hashvalue[33];
 			int conv[crypto_hash_sha512_BYTES];
 			if(strcmp((char *)signature->digest.buf, "sha256") == 0)
@@ -1102,6 +1172,11 @@ int verify(const char *filename, const char *sign, MPKCPublicKey_t *PK)
         	remove((char *)(sgntmp + ".sgn").c_str());
 		} else if(strcmp((char *)signature->version.buf, "uov") == 0)
 		{
+			if(!SageMath)
+			{
+    			printf("MQCrypto: sage: command not found\n");
+    			return 1;
+			}
 			unsigned char hashvalue[20];
 			int conv[crypto_hash_sha512_BYTES];
 			memcpy(hashvalue, &out[0], 20);

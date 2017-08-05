@@ -44,6 +44,8 @@ extern "C" {
 
 #include <sodium.h>
 
+bool SageMath = false;
+
 void SetStdinEcho(bool enable);
 
 int readFile(const char *filename, std::string *content, unsigned long long *len);

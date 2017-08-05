@@ -160,6 +160,16 @@ void printSchemes(void)
   printf("uov\n");
   printf("3icp\n");
   printf("tts6440\n\n");
+  // printf("rainbow5640\t\tRainbow over GF(31) with 56 variables and 40 polynomials.\n");
+  // printf("rainbow6440\t\tRainbow over GF(31) with 64 variables and 40 polynomials.\n");
+  // printf("rainbow16242020\t\tRainbow over GF(2^4) with 64 variables and 40 polynomials.\n");
+  // printf("rainbow256181212\t\tRainbow over GF(2^8) with 42 variables and 24 polynomials.\n");
+  // printf("pflash\t\t\tSflash variant over GF(2^4) with 37 variables and 26 polynomials.\n");
+  // printf("sflashv1\t\t\tMatsumoto-Imai minus variant over GF(2) with 37 variables and 26 polynomials.\n");
+  // printf("sflashv2\t\t\tMatsumoto-Imai minus variant over GF(2^7) with 37 variables and 26 polynomials.\n");
+  // printf("uov\t\t\tUOV over GF(2^4) with 120 variables and 40 polynomials.\n");
+  // printf("3icp\n");
+  // printf("tts6440\n\n");
 }
 
 int generateKeypairExec(char **line, uint8_t argc)
@@ -206,6 +216,12 @@ int generateKeypairExec(char **line, uint8_t argc)
       symencryption = "aes_192_cbc";
     else if(strcmp(line[i], "-aes_128_cbc") == 0)
       symencryption = "aes_128_cbc";
+    else if(strcmp(line[i], "-aes_256_ecb") == 0)
+      symencryption = "aes_256_ecb";
+    else if(strcmp(line[i], "-aes_192_ecb") == 0)
+      symencryption = "aes_192_ecb";
+    else if(strcmp(line[i], "-aes_128_ecb") == 0)
+      symencryption = "aes_128_ecb";
     else
     {
       printf("ERROR: Invalid option: %s\n",line[i]);
@@ -225,6 +241,12 @@ int generateKeypairExec(char **line, uint8_t argc)
   {
     printf("ERROR: Invalid Scheme \"%s\"\n", scheme);
     generateKeypairHelp();
+    return 1;
+  }
+
+  if((strcmp(scheme, "sflashv1") == 0 || strcmp(scheme, "sflashv2") == 0 || strcmp(scheme, "uov") == 0) && !SageMath)
+  {
+    printf("MQCrypto: sage: command not found\n");
     return 1;
   }
 
@@ -257,19 +279,34 @@ int generateKeypairExec(char **line, uint8_t argc)
 
   int ciphertext_len;
   unsigned char cipher_text[len + 100];
+  unsigned char plain_text[len + 100];
   if(strcmp(symencryption, "aes_128_cbc") == 0)
   {
     /* Encrypt the plaintext */
-    ciphertext_len = c_aes_256_cbc_encrypt((unsigned char *)asn1bin.c_str(), len, out256, &out128[15], cipher_text);
+    ciphertext_len = c_aes_128_cbc_encrypt((unsigned char *)asn1bin.c_str(), len, &out256[16], &out128[16], cipher_text);
+  }
+  else if(strcmp(symencryption, "aes_128_ecb") == 0)
+  {
+    /* Encrypt the plaintext */
+    ciphertext_len = c_aes_128_ecb_encrypt((unsigned char *)asn1bin.c_str(), len, &out256[16], &out128[16], cipher_text);
   }
   else if(strcmp(symencryption, "aes_192_cbc") == 0)
   {
-    ciphertext_len = c_aes_256_cbc_encrypt((unsigned char *)asn1bin.c_str(), len, out256, &out128[15], cipher_text);
+    ciphertext_len = c_aes_192_cbc_encrypt((unsigned char *)asn1bin.c_str(), len, &out256[8], &out128[16], cipher_text);
+  }
+  else if(strcmp(symencryption, "aes_192_ecb") == 0)
+  {
+    /* Encrypt the plaintext */
+    ciphertext_len = c_aes_192_ecb_encrypt((unsigned char *)asn1bin.c_str(), len, &out256[8], &out128[16], cipher_text);
+  }
+  else if(strcmp(symencryption, "aes_256_ecb") == 0)
+  {
+    /* Encrypt the plaintext */
+    ciphertext_len = c_aes_256_ecb_encrypt((unsigned char *)asn1bin.c_str(), len, out256, &out128[16], cipher_text);
   }
   else
   {
-    ciphertext_len = c_aes_256_cbc_encrypt((unsigned char *)asn1bin.c_str(), len, out256, &out128[15], cipher_text);
-    // decryptedtext_len = c_aes_256_cbc_decrypt(cipher_text, ciphertext_len, out256, &out128[15], plain_text);
+    ciphertext_len = c_aes_256_cbc_encrypt((unsigned char *)asn1bin.c_str(), len, out256, &out128[16], cipher_text);
   }
 
   char encryptedKey[] = "/var/tmp/enc_XXXXXX";
@@ -289,10 +326,17 @@ int generateKeypairExec(char **line, uint8_t argc)
   
   if(strcmp(symencryption, "aes_128_cbc") == 0)
     fprintf(b64EncFile, "ENC:AES-128-CBC;\n\n");
+  else if(strcmp(symencryption, "aes_128_ecb") == 0)
+    fprintf(b64EncFile, "ENC:AES-128-ECB;\n\n");
   else if(strcmp(symencryption, "aes_192_cbc") == 0)
     fprintf(b64EncFile, "ENC:AES-192-CBC;\n\n");
+  else if(strcmp(symencryption, "aes_192_ecb") == 0)
+    fprintf(b64EncFile, "ENC:AES-192-ECB;\n\n");
+  else if(strcmp(symencryption, "aes_256_ecb") == 0)
+    fprintf(b64EncFile, "ENC:AES-256-ECB;\n\n");
   else
-    fprintf(b64EncFile, "ENC:AES-256-CBC\n\n");
+    fprintf(b64EncFile, "ENC:AES-256-CBC;\n\n");
+
 
   int l,start = 0;
   l = strlen("pc/sqfu3kOpjNeChthxPgkMsaEfbkudVpNv28J0sAOJhoqCl/duqLx8hk5866pcC+ceXrESl");
@@ -458,16 +502,26 @@ int keysExec(char **command, uint8_t argc)
   int decryptedtext_len;
   unsigned char plain_text[len + 100];
   // std::cout<<"CIPHER TEXT LENGTH: "<<len<<"\n";
-  if(strcmp(&line[4], "AES-256-CBC\n") == 0)
+  if(strcmp(&line[4], "AES-256-CBC;\n") == 0)
   {
-    decryptedtext_len = c_aes_256_cbc_decrypt((unsigned char *)cipher_text.c_str(), len, out256, &out128[15], plain_text);
-  } else if(strcmp(&line[4], "AES-192-CBC\n") == 0)
+    decryptedtext_len = c_aes_256_cbc_decrypt((unsigned char *)cipher_text.c_str(), len, out256, &out128[16], plain_text);
+  } else if(strcmp(&line[4], "AES-192-CBC;\n") == 0)
   {
-    decryptedtext_len = c_aes_256_cbc_decrypt((unsigned char *)cipher_text.c_str(), len, out256, &out128[15], plain_text);
-  } else if(strcmp(&line[4], "AES-128-CBC\n") == 0)
+    decryptedtext_len = c_aes_192_cbc_decrypt((unsigned char *)cipher_text.c_str(), len, &out256[8], &out128[16], plain_text);
+  } else if(strcmp(&line[4], "AES-128-CBC;\n") == 0)
   {
-    decryptedtext_len = c_aes_256_cbc_decrypt((unsigned char *)cipher_text.c_str(), len, out256, &out128[15], plain_text);
+    decryptedtext_len = c_aes_128_cbc_decrypt((unsigned char *)cipher_text.c_str(), len, &out256[16], &out128[16], plain_text);
+  } else if(strcmp(&line[4], "AES-256-ECB;\n") == 0)
+  {
+    decryptedtext_len = c_aes_256_ecb_decrypt((unsigned char *)cipher_text.c_str(), len, out256, &out128[16], plain_text);
+  } else if(strcmp(&line[4], "AES-192-ECB;\n") == 0)
+  {
+    decryptedtext_len = c_aes_192_ecb_decrypt((unsigned char *)cipher_text.c_str(), len, &out256[8], &out128[16], plain_text);
+  } else if(strcmp(&line[4], "AES-128-ECB;\n") == 0)
+  {
+    decryptedtext_len = c_aes_128_ecb_decrypt((unsigned char *)cipher_text.c_str(), len, &out256[16], &out128[16], plain_text);
   }
+
 
   // std::cout<<"DECRYPTED LENGTH: "<<decryptedtext_len<<"\n";
 
@@ -514,15 +568,26 @@ int keysExec(char **command, uint8_t argc)
     if(!decrypt)
     {
       readBinaryFile(privtmp, &decrypted_text, &len);
-      if(strcmp(&line[4], "AES-256-CBC\n") == 0)
+      if(strcmp(&line[4], "AES-256-CBC;\n") == 0)
       {
-        ciphertext_len = c_aes_256_cbc_encrypt((unsigned char *)decrypted_text.c_str(), len, out256, &out128[15], (unsigned char *)cipher_text.c_str());
-      } else if(strcmp(&line[4], "AES-192-CBC\n") == 0)
+        ciphertext_len = c_aes_256_cbc_encrypt((unsigned char *)decrypted_text.c_str(), len, out256, &out128[16], (unsigned char *)cipher_text.c_str());
+      } else if(strcmp(&line[4], "AES-192-CBC;\n") == 0)
       {
-        ciphertext_len = c_aes_256_cbc_encrypt((unsigned char *)decrypted_text.c_str(), len, out256, &out128[15], (unsigned char *)cipher_text.c_str());
-      } else if(strcmp(&line[4], "AES-128-CBC\n") == 0)
+        ciphertext_len = c_aes_192_cbc_encrypt((unsigned char *)decrypted_text.c_str(), len, &out256[8], &out128[16], (unsigned char *)cipher_text.c_str());
+      } else if(strcmp(&line[4], "AES-128-CBC;\n") == 0)
       {
-        ciphertext_len = c_aes_256_cbc_encrypt((unsigned char *)decrypted_text.c_str(), len, out256, &out128[15], (unsigned char *)cipher_text.c_str());
+        ciphertext_len = c_aes_128_cbc_encrypt((unsigned char *)decrypted_text.c_str(), len, &out256[16], &out128[16], (unsigned char *)cipher_text.c_str());
+      } else if(strcmp(&line[4], "AES-256-ECB;\n") == 0)
+      {
+        ciphertext_len = c_aes_256_ecb_encrypt((unsigned char *)decrypted_text.c_str(), len, out256, &out128[16], (unsigned char *)cipher_text.c_str());
+      } else if(strcmp(&line[4], "AES-192-ECB;\n") == 0)
+      {
+        std::cout<<"DEC\n";
+        ciphertext_len = c_aes_192_ecb_encrypt((unsigned char *)decrypted_text.c_str(), len, &out256[8], &out128[16], (unsigned char *)cipher_text.c_str());
+        std::cout<<"DEC\n";
+      } else if(strcmp(&line[4], "AES-128-ECB;\n") == 0)
+      {
+        ciphertext_len = c_aes_128_ecb_encrypt((unsigned char *)decrypted_text.c_str(), len, &out256[16], &out128[16], (unsigned char *)cipher_text.c_str());
       }
       writeEncryptedFile((unsigned char *)cipher_text.c_str(), privtmp, ciphertext_len);
     }
@@ -606,6 +671,12 @@ int signExec(char **command, uint8_t argc)
       signHelp();
       return 1;
     }
+  }
+
+  if(strcmp(dgst, "") == 0)
+  {
+    printf("The following are valid hash functions that can be used by MQCrypto\n-sha256\n-sha512\n");
+    return -1;
   }
 
   if( access( inputFile, F_OK ) == -1 ) {
@@ -720,15 +791,24 @@ int signExec(char **command, uint8_t argc)
     int decryptedtext_len;
     unsigned char plain_text[len + 100];
     // std::cout<<"CIPHER TEXT LENGTH: "<<len<<"\n";
-    if(strcmp(&line[4], "AES-256-CBC\n") == 0)
+    if(strcmp(&line[4], "AES-256-CBC;\n") == 0)
     {
-      decryptedtext_len = c_aes_256_cbc_decrypt((unsigned char *)cipher_text.c_str(), len, out256, &out128[15], plain_text);
-    } else if(strcmp(&line[4], "AES-192-CBC\n") == 0)
+      decryptedtext_len = c_aes_256_cbc_decrypt((unsigned char *)cipher_text.c_str(), len, out256, &out128[16], plain_text);
+    } else if(strcmp(&line[4], "AES-192-CBC;\n") == 0)
     {
-      decryptedtext_len = c_aes_256_cbc_decrypt((unsigned char *)cipher_text.c_str(), len, out256, &out128[15], plain_text);
-    } else if(strcmp(&line[4], "AES-128-CBC\n") == 0)
+      decryptedtext_len = c_aes_192_cbc_decrypt((unsigned char *)cipher_text.c_str(), len, &out256[8], &out128[16], plain_text);
+    } else if(strcmp(&line[4], "AES-128-CBC;\n") == 0)
     {
-      decryptedtext_len = c_aes_256_cbc_decrypt((unsigned char *)cipher_text.c_str(), len, out256, &out128[15], plain_text);
+      decryptedtext_len = c_aes_128_cbc_decrypt((unsigned char *)cipher_text.c_str(), len, &out256[16], &out128[16], plain_text);
+    } else if(strcmp(&line[4], "AES-256-ECB;\n") == 0)
+    {
+      decryptedtext_len = c_aes_256_ecb_decrypt((unsigned char *)cipher_text.c_str(), len, out256, &out128[16], plain_text);
+    } else if(strcmp(&line[4], "AES-192-ECB;\n") == 0)
+    {
+      decryptedtext_len = c_aes_192_ecb_decrypt((unsigned char *)cipher_text.c_str(), len, &out256[8], &out128[16], plain_text);
+    } else if(strcmp(&line[4], "AES-128-ECB;\n") == 0)
+    {
+      decryptedtext_len = c_aes_128_ecb_decrypt((unsigned char *)cipher_text.c_str(), len, &out256[16], &out128[16], plain_text);
     }
     
     MPKCPrivateKey_t *Private;
@@ -737,9 +817,21 @@ int signExec(char **command, uint8_t argc)
     else
       Private = getPrivateKey_t(plain_text, decryptedtext_len);
 
-    sign(inputFile, Private, dgst, signtmp);
+    if(sign(inputFile, Private, dgst, signtmp) != 0)
+    {
+      remove(signtmp);
+      remove((char *)b64decoded.c_str());
+      remove((char *)tmpinput.c_str());
+      return 1;
+    }
   } else {
-    sign(inputFile, (char *)b64decoded.c_str(), dgst, signtmp);
+    if(sign(inputFile, (char *)b64decoded.c_str(), dgst, signtmp) != 0)
+    {
+      remove(signtmp);
+      remove((char *)b64decoded.c_str());
+      remove((char *)tmpinput.c_str());
+      return 1;
+    }  
   }
 
   content = "";
@@ -950,15 +1042,24 @@ int verifyExec(char **command, uint8_t argc)
     int decryptedtext_len;
     unsigned char plain_text[len + 100];
     // std::cout<<"CIPHER TEXT LENGTH: "<<len<<"\n";
-    if(strcmp(&line[4], "AES-256-CBC\n") == 0)
+    if(strcmp(&line[4], "AES-256-CBC;\n") == 0)
     {
-      decryptedtext_len = c_aes_256_cbc_decrypt((unsigned char *)cipher_text.c_str(), len, out256, &out128[15], plain_text);
-    } else if(strcmp(&line[4], "AES-192-CBC\n") == 0)
+      decryptedtext_len = c_aes_256_cbc_decrypt((unsigned char *)cipher_text.c_str(), len, out256, &out128[16], plain_text);
+    } else if(strcmp(&line[4], "AES-192-CBC;\n") == 0)
     {
-      decryptedtext_len = c_aes_256_cbc_decrypt((unsigned char *)cipher_text.c_str(), len, out256, &out128[15], plain_text);
-    } else if(strcmp(&line[4], "AES-128-CBC\n") == 0)
+      decryptedtext_len = c_aes_192_cbc_decrypt((unsigned char *)cipher_text.c_str(), len, &out256[8], &out128[16], plain_text);
+    } else if(strcmp(&line[4], "AES-128-CBC;\n") == 0)
     {
-      decryptedtext_len = c_aes_256_cbc_decrypt((unsigned char *)cipher_text.c_str(), len, out256, &out128[15], plain_text);
+      decryptedtext_len = c_aes_128_cbc_decrypt((unsigned char *)cipher_text.c_str(), len, &out256[16], &out128[16], plain_text);
+    } else if(strcmp(&line[4], "AES-256-ECB;\n") == 0)
+    {
+      decryptedtext_len = c_aes_256_ecb_decrypt((unsigned char *)cipher_text.c_str(), len, out256, &out128[16], plain_text);
+    } else if(strcmp(&line[4], "AES-192-ECB;\n") == 0)
+    {
+      decryptedtext_len = c_aes_192_ecb_decrypt((unsigned char *)cipher_text.c_str(), len, &out256[8], &out128[16], plain_text);
+    } else if(strcmp(&line[4], "AES-128-ECB;\n") == 0)
+    {
+      decryptedtext_len = c_aes_128_ecb_decrypt((unsigned char *)cipher_text.c_str(), len, &out256[16], &out128[16], plain_text);
     }
 
     MPKCPublicKey_t *Public = getPublicKey(plain_text, decryptedtext_len);
@@ -983,9 +1084,11 @@ void keysHelp(void)
 {
   printf("keys <keypair.pem> [Options]\n\n");
   printf("Options:\n");
-  printf("-pubout <public-key.pem>\t\tOutput file to save the public key.\n");
-  printf("-privout <private-key.pem>\t\tOutput file to save the private key.\n");
-  printf("-passin pass:<phrase>\t\t\tPass phrase for decryption of the input keypair.\n\n");
+  printf("-pubout <public-key.pem>\tOutput file to save the public key.\n");
+  printf("-privout <private-key.pem>\tOutput file to save the private key.\n");
+  printf("-passin pass:<phrase>\t\tPass phrase for decryption of the input keypair.\n");
+  printf("-decrypt\t\t\tThe private key will be saved in a decrypted file.\n");
+  printf("-zip\t\t\t\tThe output file will be compressed using bzip2.\n\n");
 }
 
 void generateKeypairHelp(void)
@@ -1009,9 +1112,10 @@ void generateKeypairHelp(void)
 	printf("if left in blank the keys will output in the files scheme_PK.bin and scheme_SK.bin\n");
   printf("-symencryption\t\t\tSymmetric Encryption to use for the encryption of the private key.\n");
   printf("\t\t\t\tSymmetric Cryptography Algorithms that can be used:\n");
-  printf("\t\t\t\taes_128_cbc\taes_192_cbc\taes_256_cbc\n");
+  printf("\t\t\t\t-aes_128_cbc\t-aes_192_cbc\t-aes_256_cbc\n");
+  printf("\t\t\t\t-aes_128_ecb\t-aes_192_ecb\t-aes_256_ecb\n");
   printf("-passout pass:<phrase>\t\tPass phrase used to encrypt the private key.\n");
-  printf("-a\t\t\t\tOutput the keypair generated in ASCII mode encoded as Base64, otherwise the output will be output in a binary file.\n\n");
+  printf("-zip\t\t\t\tCompress the keypair generated, otherwise the output will be a Base64 encoded file.\n\n");
   // printf("-zip\t\t\tUse a compressor on the output key (using bzip2).\n\n");
 }
 
@@ -1019,13 +1123,14 @@ void signHelp(void)
 {
 	printf("sign <private-key.pem> [Options]\n");
   printf("Options:\n");
-	printf("-dgst\t\t\tInput filename to be signed.\n");
-	printf("-in <file>\t\tOutput file in which to save the signature.\n");
-	printf("-out <signature>\tSecret key to be used for the signing of the input document.\n");
+	printf("-in <file>\t\tInput filename to be signed.\n");
+	printf("-out <signature>\tOutput file in which to save the signature.\n");
   printf("-passin pass:<phrase>\tPass phrase for decryption of the input keypair.\n");
-	printf("\nThe following digest algorithms can be used:\n");
-	printf("sha256\n");
-	printf("sha512\n\n");
+  printf("-dgst\t\t\tInput filename to be signed.\n");
+	printf("\t\t\tThe following digest algorithms can be used:\n");
+	printf("\t\t\t-sha256\n");
+	printf("\t\t\t-sha512\n");
+  printf("-zip\t\t\tCompress the signature using bzip2.\n\n");
 }
 
 void verifyHelp(void)
@@ -1061,11 +1166,13 @@ void sh_help(void)
 {
 	printf("The following instructions can be used\n");
 	printf("-help\t\t\tDisplay this menu with instructions of how to use the implemented MPKC schemes\n");
-	printf("-genKeys\tGenerate a public and private pair of keys of a choosen scheme\n");
+  printf("-list_schemes\t\tDisplay a list with the schemes that can be used by MQCrypto\n");
+	printf("-genKeys\t\tGenerate a public and private pair of keys of a choosen scheme\n");
+  printf("-keys\t\t\tExtracts the public/private key from the keypair file\n");
 	printf("-sign\t\t\tSign a document using a previous generated key\n");
 	printf("-verify\t\t\tVerify a signature in a document\n");
-	printf("-encrypt\t\tEncrypt a document using a previous generated key\n");
-	printf("-decrypt\t\tDecrypt an encrypted document\n");
+	// printf("-encrypt\t\tEncrypt a document using a previous generated key\n");
+	// printf("-decrypt\t\tDecrypt an encrypted document\n");
 	printf("exit()\t\t\tExit from the execution of the present program\n\n");
 }
 
@@ -1227,7 +1334,7 @@ int lsh_execute(char **args, uint8_t argc)
   		return 1;
   	}
   }
-  else if(strcmp(args[0], "-list_schemes") == 0)
+  else if(strcmp(args[0], "list_schemes") == 0)
   {
     printSchemes();
   }
@@ -1303,52 +1410,17 @@ void lsh_loop(void)
   } while (status);
 }
 
-#if 0
-
-int main()
-{
-	srand(time(0));
-
-	// // printf("\n***Iniciando prueba de firma del esquema Rainbow5640***\n");
-	// // firmaRainbow5640();
-	// generateKeypair("rainbow5640", "rainbow5640");
-	// sign("archivo_prueba.txt", "rainbow5640_SK.txt", "sha256");
-	// verify("archivo_prueba.txt", "archivo_prueba.txt_signature.txt", "rainbow5640_PK.txt");
-
-	// // printf("\n***Iniciando prueba de firma del esquema Rainbow6440***\n");
-	// // firmaRainbow6440();
-	// generateKeypair("rainbow6440", "rainbow6440");
-	// sign("archivo_prueba.txt", "rainbow6440_SK.txt", "sha256");
-	// verify("archivo_prueba.txt", "archivo_prueba.txt_signature.txt", "rainbow6440_PK.txt");
-
-	// // printf("\n***Iniciando prueba de firma del esquema Rainbow16242020***\n");
-	// // firmaRainbow16242020();
-	// generateKeypair("rainbow16242020", "rainbow16242020");
-	// sign("archivo_prueba.txt", "rainbow16242020_SK.txt", "sha256");
-	// verify("archivo_prueba.txt", "archivo_prueba.txt_signature.txt", "rainbow16242020_PK.txt");
-
-	// // printf("\n***Iniciando prueba de firma del esquema Rainbow256181212***\n");
-	// // firmaRainbow256181212();
-	// generateKeypair("rainbow256181212", "rainbow256181212");
-	// sign("archivo_prueba.txt", "rainbow256181212_SK.txt", "sha256");
-	// verify("archivo_prueba.txt", "archivo_prueba.txt_signature.txt", "rainbow256181212_PK.txt");
-
-	// // printf("\n***Iniciando prueba de firma del esquema PFlash***\n");
-	// // firmaPFlash();
-	// generateKeypair("pflash", "pflash");
-	// sign("archivo_prueba.txt", "pflash_SK.txt", "sha256");
-	// verify("archivo_prueba.txt", "archivo_prueba.txt_signature.txt", "pflash_PK.txt");
-
-	// generateKeypair("hfe", "hfe");
-	// encrypt("archivo_prueba.txt", "hfe_PK.txt", "cipher_text.txt");
-	// decrypt("archivo_prueba.txt_cipher.txt", "hfe_SK.txt", "decrypted_text.txt");
-}
-
-#endif
-
 int main(int argc, char **argv)
 {
-	// Load config files, if any.
+  redi::ipstream proc("sage --version", redi::pstreams::pstdout | redi::pstreams::pstderr);
+
+  std::string str;
+  std::getline(proc.err(), str);
+
+  if(str == "")
+    SageMath = true;
+
+  // Load config files, if any.
   if(argc > 1)
   {
     lsh_execute(&argv[1], argc-1);

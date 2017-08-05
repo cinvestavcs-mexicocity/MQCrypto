@@ -302,6 +302,8 @@ void generateKeypair(char cryptosystem[], char Keypairfilename[]) {
 			encodeKeyPair("sflashv1", (char *)pk.c_str(), lpk, (char *)sk.c_str(), lsk, Keypairfilename);
         } else {
         	std::cout<<"ERROR: Key generation failed.\n";
+        	std::cout<<"Make sure SageMath is installed and include its path to the PATH environment variable.\n";
+        	strcpy(Keypairfilename, "");
         }
         remove((char *)keytmp.c_str());
         remove((char *)(keytmp + ".pub").c_str());
@@ -332,6 +334,8 @@ void generateKeypair(char cryptosystem[], char Keypairfilename[]) {
         	encodeKeyPair("sflashv2", (char *)pk.c_str(), lpk, (char *)sk.c_str(), lsk, Keypairfilename);
         } else {
         	std::cout<<"ERROR: Key generation failed.\n";
+        	std::cout<<"Make sure SageMath is installed and include its path to the PATH environment variable.\n";
+        	strcpy(Keypairfilename, "");
         }
         remove((char *)keytmp.c_str());
         remove((char *)(keytmp + ".pub").c_str());
@@ -360,6 +364,8 @@ void generateKeypair(char cryptosystem[], char Keypairfilename[]) {
         	encodeKeyPair("uov", (char *)pk.c_str(), lpk, (char *)sk.c_str(), lsk, Keypairfilename);
         } else {
         	std::cout<<"ERROR: Key generation failed.\n";
+        	std::cout<<"Make sure SageMath is installed and include its path to the PATH environment variable.\n";
+        	strcpy(Keypairfilename, "");
         }
         remove((char *)keytmp.c_str());
         remove((char *)(keytmp + ".pub").c_str());

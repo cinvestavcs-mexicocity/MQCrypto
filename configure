@@ -4486,6 +4486,8 @@ _ACEOF
 
   LIBS="-lbz2 $LIBS"
 
+else
+  as_fn_error $? "Failed to find libbz2-dev." "$LINENO" 5
 fi
 
 
