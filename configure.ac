@@ -52,5 +52,7 @@ AC_CONFIG_FILES([Makefile
 		src/sage/MPKC/MatsumotoImai/Makefile
 		src/sage/MPKC/MatsumotoImai/Sflash/Makefile
 		src/sage/MPKC/UOV/Makefile
-		src/sage/MPKC/Utils/Makefile])
+		src/sage/MPKC/Utils/Makefile
+		build/Makefile
+		build/man/Makefile])
 AC_OUTPUT

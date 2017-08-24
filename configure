@@ -6143,7 +6143,7 @@ fi
 done
 
 
-ac_config_files="$ac_config_files Makefile src/Makefile src/sage/Makefile src/sage/MPKC/Makefile src/sage/MPKC/MatsumotoImai/Makefile src/sage/MPKC/MatsumotoImai/Sflash/Makefile src/sage/MPKC/UOV/Makefile src/sage/MPKC/Utils/Makefile"
+ac_config_files="$ac_config_files Makefile src/Makefile src/sage/Makefile src/sage/MPKC/Makefile src/sage/MPKC/MatsumotoImai/Makefile src/sage/MPKC/MatsumotoImai/Sflash/Makefile src/sage/MPKC/UOV/Makefile src/sage/MPKC/Utils/Makefile build/Makefile build/man/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -6884,6 +6884,8 @@ do
     "src/sage/MPKC/MatsumotoImai/Sflash/Makefile") CONFIG_FILES="$CONFIG_FILES src/sage/MPKC/MatsumotoImai/Sflash/Makefile" ;;
     "src/sage/MPKC/UOV/Makefile") CONFIG_FILES="$CONFIG_FILES src/sage/MPKC/UOV/Makefile" ;;
     "src/sage/MPKC/Utils/Makefile") CONFIG_FILES="$CONFIG_FILES src/sage/MPKC/Utils/Makefile" ;;
+    "build/Makefile") CONFIG_FILES="$CONFIG_FILES build/Makefile" ;;
+    "build/man/Makefile") CONFIG_FILES="$CONFIG_FILES build/man/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
