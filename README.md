@@ -93,3 +93,12 @@ The signing and verification processes can be called with the following function
 
     mqcrypto sign
     mqcrypto verify
+
+Mac OS
+---------------------------------------
+
+In the installation on Mac OS, some issues may occur with the OpenSSL library include flags
+from pkg-config, this problem can be easily solved by adding the path of the OpenSSL package 
+config path to the environment variable PKG_CONFIG_PATH:
+
+    export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/Cellar/openssl/1.0.2l/lib/pkgconfig/
